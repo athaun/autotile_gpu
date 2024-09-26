@@ -1,19 +1,12 @@
-#include <cstdint>
-#include <fstream>
-#include <limits>
-#include <sstream>
-#include <vector>
-
-#include "rules.h"
-#include "tile.h"
+#include "common.h"
 
 namespace Rules {
 
 //////////////////////////////////////////
-// Rules_t implementation
+// Rules implementation
 //////////////////////////////////////////
 
-void Rules_t::insert(const rule_t& rule) {
+void Rules::insert(const rule_t& rule) {
 	if (load_factor() > 0.7) {
 		resize(table.size() * 2); // Resize if load factor exceeds 0.7
 	}
@@ -36,7 +29,7 @@ void Rules_t::insert(const rule_t& rule) {
 	num_elements++;
 }
 
-size_t Rules_t::find_index(uint32_t from_1, uint32_t from_2) {
+size_t Rules::find_index(tile_t from_1, tile_t from_2) {
 	uint64_t index = hash_rule(from_1, from_2) % table.size();
 	int probes = 0;
 
@@ -53,21 +46,25 @@ size_t Rules_t::find_index(uint32_t from_1, uint32_t from_2) {
 	return index;
 }
 
-rule_t Rules_t::find(uint32_t from_1, uint32_t from_2) {
-	return table[find_index(from_1, from_2)];
+rule_t Rules::find(tile_t from_1, tile_t from_2) {
+	size_t index = find_index(from_1, from_2);
+	if (index == table.size()) {
+		return INVALID_RULE;
+	}
+	return table[index];
 }
 
 std::vector<rule_t> table;
 
-double Rules_t::load_factor() {
+double Rules::load_factor() {
 	return (double)num_elements / table.size();
 }
 
 //////////////////////////////////////////
-// Rules_t private members
+// Rules private members
 //////////////////////////////////////////
 
-uint64_t Rules_t::hash_rule(const uint32_t from_1, const uint32_t from_2) {
+uint64_t Rules::hash_rule(const tile_t from_1, const tile_t from_2) {
 	uint64_t hash = 0x811c9dc5;
 	hash ^= from_1;
 	hash *= 0x01000193;
@@ -77,11 +74,11 @@ uint64_t Rules_t::hash_rule(const uint32_t from_1, const uint32_t from_2) {
 	return hash;
 }
 
-uint64_t Rules_t::hash_rule(const rule_t& rule) {
+uint64_t Rules::hash_rule(const rule_t& rule) {
 	return hash_rule(rule.from_1, rule.from_2);
 }
 
-void Rules_t::resize(size_t new_size) {
+void Rules::resize(size_t new_size) {
 	std::vector<rule_t> new_table(new_size, INVALID_RULE);
 	for (const rule_t& rule : table) {
 		if (rule.from_1 != EMPTY_TILE) {
@@ -101,6 +98,13 @@ void Rules_t::resize(size_t new_size) {
 // Rules namespace functions
 //////////////////////////////////////////
 
+bool is_valid(rule_t& rule) {
+	return !(rule.from_1 == INVALID_RULE.from_1 && 
+			rule.from_2 == INVALID_RULE.from_2 &&
+			rule.to_1 == INVALID_RULE.to_1 &&
+			rule.to_2 == INVALID_RULE.to_2);
+}
+
 rule_t parse_rule(std::string rule_str) {
 	// Find the positions of the special characters
 	size_t plus_pos = rule_str.find("+");
@@ -118,18 +122,18 @@ rule_t parse_rule(std::string rule_str) {
 	std::string to_1_str = rule_str.substr(arrow_pos + 2, plus_pos2 - (arrow_pos + 2)); // After "->"
 	std::string to_2_str = rule_str.substr(plus_pos2 + 1);								// After second "+"
 
-	// Dump strings to uint32_t
-	uint32_t from_1 = Tile::encode(from_1_str);
-	uint32_t from_2 = Tile::encode(from_2_str);
+	// Dump strings to tile_t
+	tile_t from_1 = Tile::encode(from_1_str);
+	tile_t from_2 = Tile::encode(from_2_str);
 
-	uint32_t to_1 = Tile::encode(to_1_str);
-	uint32_t to_2 = Tile::encode(to_2_str);
+	tile_t to_1 = Tile::encode(to_1_str);
+	tile_t to_2 = Tile::encode(to_2_str);
 
 	// Create and return the rule_t structure
 	return { from_1, from_2, to_1, to_2 };
 }
 
-Rules_t load(std::string filepath) {
+Rules load(std::string filepath) {
 	std::ifstream file(filepath);
 	if (!file.is_open()) {
 		std::cerr << "Error: Could not open the file " << filepath << std::endl;
@@ -141,9 +145,9 @@ Rules_t load(std::string filepath) {
 
 	line = line.substr(0, line.find(' '));
 	int rule_count = std::stoi(line);
-	std::cout << "there are " << rule_count << " rules to parse\n";
+	std::cout << "There are " << rule_count << " rules to parse\n";
 
-	Rules_t rules(rule_count * 3);
+	Rules rules(rule_count * 3);
 
 	for (int i = 0; i < rule_count; i++) {
 		std::getline(file, line);
@@ -155,6 +159,8 @@ Rules_t load(std::string filepath) {
 	}
 
 	file.close();
+
+	std::cout << "Finished parsing rules\n\n";
 
 	return rules;
 }

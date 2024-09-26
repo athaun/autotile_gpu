@@ -1,5 +1,4 @@
-#include "seed.h"
-#include "tile.h"
+#include "common.h"
 
 namespace Seed {
 
@@ -46,6 +45,8 @@ grid_t load(std::string filepath) {
 			max_width = x + 1;
 		}
 	}
+
+	std::cout << "\nFinished loading seed, size: " << max_width << "x" << temp_grid.size() << "\n\n";
 
 	file.close();
 

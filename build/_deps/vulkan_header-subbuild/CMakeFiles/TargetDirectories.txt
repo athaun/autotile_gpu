@@ -1,0 +1,3 @@
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate.dir
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/edit_cache.dir
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/rebuild_cache.dir

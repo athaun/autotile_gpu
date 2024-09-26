@@ -1,4 +1,4 @@
-#include "tile.h"
+#include "common.h"
 
 namespace Tile {
 uint32_t encode(const std::string& str) {
@@ -15,5 +15,17 @@ std::string decode(uint32_t value) {
 		result += (char)(value >> (i * 8)); // Unpack each character
 	}
 	return result;
+}
+
+void lock(uint32_t& tile) {
+    tile |= 0x80000000; // Set the MSB to 1 to mark as locked
+}
+
+void unlock(uint32_t& tile) {
+    tile &= ~0x80000000; // Set the MSB to 0 to mark as unlocked
+}
+
+bool is_locked(uint32_t tile) {
+    return (tile & 0x80000000) != 0;
 }
 } // namespace Tile

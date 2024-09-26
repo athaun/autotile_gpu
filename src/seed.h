@@ -1,15 +1,10 @@
 #pragma once
 
-#include <cstdint>
-#include <iostream>
-#include <vector>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
+#include "common.h"
 
 namespace Seed {
     struct grid_t {
-        uint32_t* tiles;
+        tile_t* tiles;
         int width;
         int height;
     };

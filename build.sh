@@ -22,7 +22,9 @@ compile() {
 }
 
 run() {
-    ./$BUILD_DIR/$PROJECT_NAME
+    cd ./$BUILD_DIR
+    ./$PROJECT_NAME
+    cd -
 }
 
 clean() {

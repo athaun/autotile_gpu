@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate-complete.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-build.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-configure.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-download.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-install.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-mkdir.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-patch.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-test.rule"
+		},
+		{
+			"file" : "/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"vulkan_header-populate"
+		],
+		"name" : "vulkan_header-populate"
+	}
+}

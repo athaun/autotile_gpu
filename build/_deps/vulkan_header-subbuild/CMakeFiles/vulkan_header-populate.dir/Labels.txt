@@ -1,0 +1,14 @@
+# Target labels
+ vulkan_header-populate
+# Source files and their labels
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/CMakeFiles/vulkan_header-populate-complete.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-build.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-configure.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-download.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-install.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-mkdir.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-patch.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-test.rule
+/Users/asher/code/work/autotile_gpu/build/_deps/vulkan_header-subbuild/vulkan_header-populate-prefix/src/vulkan_header-populate-stamp/vulkan_header-populate-update.rule

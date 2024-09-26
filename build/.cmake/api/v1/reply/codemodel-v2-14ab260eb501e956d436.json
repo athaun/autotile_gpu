@@ -1,0 +1,287 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						5
+					]
+				},
+				{
+					"build" : "kompute_build",
+					"childIndexes" : 
+					[
+						2,
+						3,
+						4
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-kompute_build-ae64e7482f43c3e59325.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "lib/kompute"
+				},
+				{
+					"build" : "_deps/vulkan_header-build",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-_deps.vulkan_header-build-86df921e862a3cbff764.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10.2"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 2,
+					"source" : "build/_deps/vulkan_header-src",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "_deps/fmt-build",
+					"jsonFile" : "directory-_deps.fmt-build-531a1205a7fb4547a17b.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 3,
+					"source" : "build/_deps/fmt-src",
+					"targetIndexes" : 
+					[
+						1
+					]
+				},
+				{
+					"build" : "kompute_build/src",
+					"childIndexes" : 
+					[
+						5,
+						6,
+						8
+					],
+					"jsonFile" : "directory-kompute_build.src-68a6925e6fc979968b61.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 1,
+					"projectIndex" : 1,
+					"source" : "lib/kompute/src",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "kompute_build/src/logger",
+					"jsonFile" : "directory-kompute_build.src.logger-a63be128e7475a14caf8.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 4,
+					"projectIndex" : 1,
+					"source" : "lib/kompute/src/logger",
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"build" : "kompute_build/src/shaders",
+					"childIndexes" : 
+					[
+						7
+					],
+					"jsonFile" : "directory-kompute_build.src.shaders-ef98018e790cc6f94e38.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 4,
+					"projectIndex" : 1,
+					"source" : "lib/kompute/src/shaders"
+				},
+				{
+					"build" : "kompute_build/src/shaders/glsl",
+					"jsonFile" : "directory-kompute_build.src.shaders.glsl-c62ccf6e19a6e2310a9f.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 6,
+					"projectIndex" : 1,
+					"source" : "lib/kompute/src/shaders/glsl",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "kompute_build/src/include",
+					"jsonFile" : "directory-kompute_build.src.include-107db3ac53d7a5f7122d.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.20"
+					},
+					"parentIndex" : 4,
+					"projectIndex" : 1,
+					"source" : "lib/kompute/src/include"
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "AutoTile",
+					"targetIndexes" : 
+					[
+						0,
+						5
+					]
+				},
+				{
+					"childIndexes" : 
+					[
+						2,
+						3
+					],
+					"directoryIndexes" : 
+					[
+						1,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"name" : "kompute",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2,
+						3,
+						4
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "Vulkan-Headers",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "FMT",
+					"parentIndex" : 1,
+					"targetIndexes" : 
+					[
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "AutoTile::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-AutoTile-26d1cfa2af6bf9d70b57.json",
+					"name" : "AutoTile",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "fmt::@976f4f0bee90b99ecdb6",
+					"jsonFile" : "target-fmt-6979413aae84020a823c.json",
+					"name" : "fmt",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "kompute::@6144c18517f50462bc1e",
+					"jsonFile" : "target-kompute-9bef46158f501cbca3fb.json",
+					"name" : "kompute",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "kp_logger::@b180bc647351a2b4dfdf",
+					"jsonFile" : "target-kp_logger-4fc73bc4a5efa78692bb.json",
+					"name" : "kp_logger",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "kp_shader::@0a147f010c5bb43c0d4f",
+					"jsonFile" : "target-kp_shader-61aba6f1c4671a271719.json",
+					"name" : "kp_shader",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "shader::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-shader-e9887baff2a0d2c58c79.json",
+					"name" : "shader",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "uninstall::@da31f143cb6d09ba64e6",
+					"jsonFile" : "target-uninstall-08e7531255cc2fe2afbf.json",
+					"name" : "uninstall",
+					"projectIndex" : 2
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/asher/code/work/autotile_gpu/build",
+		"source" : "/Users/asher/code/work/autotile_gpu"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 6
+	}
+}

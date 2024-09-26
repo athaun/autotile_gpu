@@ -1,8 +1,6 @@
 #pragma once
-#include <cstdint>
-#include <iostream>
-#include <stdexcept>
-#include <vector>
+
+#include "common.h"
 
 namespace Rules {
 
@@ -18,11 +16,13 @@ struct rule_t {
 const uint32_t EMPTY_TILE = 0xFFFFFFFF;
 const rule_t INVALID_RULE = { EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE };
 
-class Rules_t {
+class Rules {
 public:
 	// Constructor
-	Rules_t(size_t capacity)
-		: table(capacity, INVALID_RULE), num_elements(0) {}
+	Rules(size_t capacity) : table(capacity, INVALID_RULE), num_elements(0) {}
+
+	// Default constructor
+	Rules() : table(0, INVALID_RULE), num_elements(0) {}
 
 	// Insert a rule into the table
 	void insert(const rule_t& rule);
@@ -49,5 +49,6 @@ private:
 	size_t num_elements;
 };
 
-Rules_t load(std::string filepath);
+Rules load(std::string filepath);
+bool is_valid(rule_t& rule);
 }

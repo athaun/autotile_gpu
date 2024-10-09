@@ -99,7 +99,7 @@ void Rules::resize(size_t new_size) {
 //////////////////////////////////////////
 
 bool is_valid(rule_t& rule) {
-	return !(rule.from_1 == INVALID_RULE.from_1 && 
+	return !(rule.from_1 == INVALID_RULE.from_1 &&
 			rule.from_2 == INVALID_RULE.from_2 &&
 			rule.to_1 == INVALID_RULE.to_1 &&
 			rule.to_2 == INVALID_RULE.to_2);
@@ -109,7 +109,7 @@ rule_t parse_rule(std::string rule_str) {
 	// Find the positions of the special characters
 	size_t plus_pos = rule_str.find("+");
 	size_t arrow_pos = rule_str.find("->");
-	size_t plus_pos2 = rule_str.find("+", arrow_pos + 4);
+	size_t plus_pos2 = rule_str.find("+", arrow_pos + 1);
 
 	if (plus_pos == std::string::npos || arrow_pos == std::string::npos || plus_pos2 == std::string::npos) {
 		std::cout << "Invalid rule format: " << rule_str << "\n";
@@ -151,6 +151,10 @@ Rules load(std::string filepath) {
 
 	for (int i = 0; i < rule_count; i++) {
 		std::getline(file, line);
+
+		// If the line begins with #, skip it.
+		if (line[0] == '#') continue;
+
 		rules.insert(parse_rule(line));
 
 		if (i % 1000000 == 0 && i != 0) {

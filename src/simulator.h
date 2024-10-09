@@ -3,7 +3,7 @@
 #include "common.h"
 
 namespace Simulator {
-    
+
     struct loc_t {
         int x;
         int y;
@@ -39,7 +39,8 @@ namespace Simulator {
         void push(delta_t delta);
     };
 
-    void init(std::string rules_path, std::string seed_path);
+    void init(std::string horizontal_rules_path, std::string vertical_rules_path, std::string seed_path);
+    void init(std::string system_name);
     void log_deltas(DeltaBuffer& buffer);
     void run_serial();
     void run_parallel();

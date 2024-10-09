@@ -18,11 +18,18 @@ grid_t load(std::string filepath) {
 	// Read file line by line
 	while (std::getline(file, line)) {
 		std::istringstream iss(line);
+
 		std::string tile;
 		int x, y;
 
 		// Parse the line
 		std::getline(iss, tile, ',');
+
+		// Skip empty lines
+		if (tile.empty()) continue;
+
+        // Skip lines beginning with #
+        if (tile[0] == '#') continue;
 
 		char comma;
         iss >> x >> comma >> y;

@@ -29,10 +29,20 @@ void init(std::string system_name) {
     init(system_name + ".hrules", system_name + ".vrules", system_name + ".seed");
 }
 
+void print_grid() {
+    std::cout << "\n";
+    for (int y = 0; y < grid.height; y++) {
+        for (int x = 0; x < grid.width; x++) {
+            std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << "\t";
+        }
+        std::cout << "\n";
+    }
+}
+
 void log_deltas(DeltaBuffer& buffer) {
     if (buffer.count == 0) return;
 
-    std::cout << "========================\nStep deltas: " << buffer.count << "\n";
+    std::cout << "\n========================\n\nStep deltas: " << buffer.count << "\n";
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
 		std::cout << "(" << delta.location_a.x << ", " << delta.location_a.y << ", "
@@ -41,14 +51,7 @@ void log_deltas(DeltaBuffer& buffer) {
 				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b) << "\n";
 	}
 
-	// Print the grid
-	std::cout << "\n";
-	for (int y = 0; y < grid.height; y++) {
-        for (int x = 0; x < grid.width; x++) {
-            std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << "\t";
-        }
-        std::cout << "\n";
-    }
+	print_grid();
 }
 
 void apply_deltas(DeltaBuffer& buffer) {
@@ -70,27 +73,17 @@ void apply_deltas(DeltaBuffer& buffer) {
 	}
 
 	// Print the grid
-	std::cout << "\nApplied deltas\n";
-	for (int y = 0; y < grid.height; y++) {
-        for (int x = 0; x < grid.width; x++) {
-            std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << "\t";
-        }
-        std::cout << "\n";
-    }
+	std::cout << "\nApplied deltas:";
+	print_grid();
 
 	buffer.count = 0;
 }
 
-loc_t neighborhood[2] = {
-	{ 1, 0 }, // Right
-	{ 0, 1 }, // Down
-};
-
-loc_t attachment_points[4] = {
-    { 0, 1 }, // Down
+loc_t neighborhood[4] = {
     { 1, 0 }, // Right
-    { 0, -1 }, // Up
+    { 0, 1 }, // Down
     { -1, 0 }, // Left
+    { 0, -1 }, // Up
 };
 
 void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
@@ -105,6 +98,7 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
 
     	loc_t neighbor = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
+        // Check if the neighbor is out of bounds
     	if (neighbor.x < 0 || neighbor.x >= grid.width || neighbor.y < 0 || neighbor.y >= grid.height) {
     		continue;
     	}
@@ -129,7 +123,11 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
     }
 }
 
-void choose_deltas(std::vector<delta_t>& possible_deltas) {
+/*
+ * Non-deterministically choose a delta from the list of
+ * possible deltas generated from attachment or transition rules
+*/
+void choose_delta(std::vector<delta_t>& possible_deltas) {
     if (possible_deltas.empty()) return;
 
    	delta_buffer.push(possible_deltas[rand() % possible_deltas.size()]);
@@ -137,16 +135,14 @@ void choose_deltas(std::vector<delta_t>& possible_deltas) {
 }
 
 void run_serial() {
+	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
 
 	int ticks = 0;
 	while (true) {
 	    // Randomly select an X and Y coordinate in the grid
 		loc_t location = { rand() % grid.width, rand() % grid.height };
-
 		tile_t tile_a = grid.tiles[location.x + location.y * grid.width];
-
-		std::vector<delta_t> possible_deltas = std::vector<delta_t>();
 
 		if (tile_a == Rules::EMPTY_TILE) {
 			check_attachment(tile_a, location, possible_deltas);
@@ -154,7 +150,7 @@ void run_serial() {
 		    check_transitions(tile_a, location, possible_deltas);
 		}
 
-		choose_deltas(possible_deltas);
+		choose_delta(possible_deltas);
 
 		if (++ticks % 100 == 0) {
 			log_deltas(delta_buffer);

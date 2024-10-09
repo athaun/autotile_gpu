@@ -57,14 +57,14 @@ namespace Simulator {
     void check_tile(tile_t tile_a, const loc_t& location) {
 
         for (int i = 0; i < 2; i++) {
-            if (Tile::is_locked(tile_a)) {
-                return;
-            }
-
             if (tile_a == Rules::EMPTY_TILE) {
                 // Check attachment
                 return;
             }
+            if (Tile::is_locked(tile_a)) {
+                return;
+            }
+
 
             loc_t neighbor = { location.x + neighborhood[i].x, location.y + neighborhood[i].y };
             
@@ -74,6 +74,10 @@ namespace Simulator {
 
             tile_t tile_b = neighbor.get(grid);
             Rules::rule_t rule = rules.find(tile_a, tile_b);
+
+            if (Tile::is_locked(tile_b)) {
+                return;
+            }///////////////////////////////
 
             if (!Rules::is_valid(rule)) continue;
 

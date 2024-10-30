@@ -5,7 +5,7 @@
 namespace Rules {
 
 // Define a struct for the rule
-struct rule_t {
+struct transition_t {
 	tile_t tile_a;
 	tile_t tile_b;
 	tile_t to_a;
@@ -19,16 +19,20 @@ struct affinity_t {
 
 // Constants for invalid values
 const tile_t EMPTY_TILE = 0xEFFFFFFF;
-const rule_t INVALID_RULE = { EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE };
+const transition_t INVALID_TRANSITION = { EMPTY_TILE, EMPTY_TILE, EMPTY_TILE, EMPTY_TILE };
+const affinity_t INVALID_AFFINITY = { EMPTY_TILE, EMPTY_TILE };
+
+template <typename TilePair>
+TilePair get_invalid_value();
 
 template <typename TilePair>
 class Rules {
 public:
 	// Constructor
-	Rules(size_t capacity) : table(capacity, INVALID_RULE), num_elements(0) {}
+	Rules(size_t capacity) : table(capacity, get_invalid_value<TilePair>()), num_elements(0) {}
 
 	// Default constructor
-	Rules() : table(0, INVALID_RULE), num_elements(0) {}
+	Rules() : table(0, get_invalid_value<TilePair>()), num_elements(0) {}
 
 	// Insert a rule into the table
 	void insert(const TilePair& rule);
@@ -52,8 +56,12 @@ private:
 	void resize(size_t new_size);
 
 	size_t num_elements;
+
 };
 
-Rules<rule_t> load(std::string filepath);
-bool is_valid(rule_t& rule);
+template <typename TilePair>
+Rules<TilePair> load(std::string filepath);
+
+bool is_valid(transition_t& rule);
+
 }

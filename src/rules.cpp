@@ -53,7 +53,7 @@ template <typename TilePair>
 TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b) {
 	size_t index = find_index(tile_a, tile_b);
 	if (index == table.size()) {
-		return INVALID_RULE;
+		return get_invalid_value<TilePair>();
 	}
 	return table[index];
 }
@@ -85,7 +85,7 @@ uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
 
 template <typename TilePair>
 void Rules<TilePair>::resize(size_t new_size) {
-	std::vector<TilePair> new_table(new_size, INVALID_RULE);
+	std::vector<TilePair> new_table(new_size, get_invalid_value<TilePair>());
 	for (const TilePair& rule : table) {
 		if (rule.tile_a != EMPTY_TILE) {
 			size_t index = hash_rule(rule) % new_size;
@@ -100,26 +100,43 @@ void Rules<TilePair>::resize(size_t new_size) {
 	table.swap(new_table);
 }
 
+template <typename TilePair>
+TilePair get_invalid_value();
+
+template <>
+transition_t get_invalid_value<transition_t>() {
+	return INVALID_TRANSITION;
+}
+
+template <>
+affinity_t get_invalid_value<affinity_t>() {
+	return INVALID_AFFINITY;
+}
+
 //////////////////////////////////////////
 // Rules namespace functions
 //////////////////////////////////////////
 
-bool is_valid(rule_t& rule) {
-	return !(rule.tile_a == INVALID_RULE.tile_a &&
-			rule.tile_b == INVALID_RULE.tile_b &&
-			rule.to_a == INVALID_RULE.to_a &&
-			rule.to_b == INVALID_RULE.to_b);
+bool is_valid(transition_t& transition) {
+	return !(transition.tile_a == INVALID_TRANSITION.tile_a &&
+			transition.tile_b == INVALID_TRANSITION.tile_b &&
+			transition.to_a == INVALID_TRANSITION.to_a &&
+			transition.to_b == INVALID_TRANSITION.to_b);
 }
 
-rule_t parse_rule(std::string rule_str) {
+template <typename TilePair>
+TilePair parse_rule(std::string rule_str);
+
+template <>
+transition_t parse_rule(std::string rule_str) {
 	// Find the positions of the special characters
 	size_t plus_pos = rule_str.find("+");
 	size_t arrow_pos = rule_str.find("->");
 	size_t plus_pos2 = rule_str.find("+", arrow_pos + 1);
 
 	if (plus_pos == std::string::npos || arrow_pos == std::string::npos || plus_pos2 == std::string::npos) {
-		std::cout << "Invalid rule format: " << rule_str << "\n";
-		throw std::invalid_argument("Invalid rule format");
+		std::cout << "Invalid transition format: " << rule_str << "\n";
+		throw std::invalid_argument("Invalid transition format");
 	}
 
 	// Extract substrings for each part
@@ -135,14 +152,32 @@ rule_t parse_rule(std::string rule_str) {
 	tile_t to_a = Tile::encode(to_a_str);
 	tile_t to_b = Tile::encode(to_b_str);
 
-	// std::cout << "Parsed rule: " << tile_a_str << " + " << tile_b_str << " -> " << to_a_str << " + " << to_b_str << "\n";
-	// std::cout << "Encoded rule: " << tile_a << " + " << tile_b << " -> " << to_a << " + " << to_b << "\n\n";
-
-	// Create and return the rule_t structure
 	return { tile_a, tile_b, to_a, to_b };
 }
 
-Rules<rule_t> load(std::string filepath) {
+template <>
+affinity_t parse_rule(std::string rule_str) {
+	// Find the positions of the special characters
+	size_t plus_pos = rule_str.find("+");
+
+	if (plus_pos == std::string::npos) {
+		std::cout << "Invalid affinity format: " << rule_str << "\n";
+		throw std::invalid_argument("Invalid affinity format");
+	}
+
+	// Extract substrings for each part
+	std::string tile_a_str = rule_str.substr(0, plus_pos);
+	std::string tile_b_str = rule_str.substr(plus_pos + 1);
+
+	// Dump strings to tile_t
+	tile_t tile_a = Tile::encode(tile_a_str);
+	tile_t tile_b = Tile::encode(tile_b_str);
+
+	return { tile_a, tile_b };
+}
+
+template <typename TilePair>
+Rules<TilePair> load(std::string filepath) {
 	std::ifstream file(filepath);
 	if (!file.is_open()) {
 		std::cerr << "Error: Could not open the file " << filepath << std::endl;
@@ -154,9 +189,13 @@ Rules<rule_t> load(std::string filepath) {
 
 	line = line.substr(0, line.find(' '));
 	int rule_count = std::stoi(line);
-	std::cout << "There are " << rule_count << " rules to parse\n";
+	if constexpr (std::is_same<TilePair, transition_t>::value) {
+		std::cout << "There are " << rule_count << " transition rules to parse\n";
+	} else if constexpr (std::is_same<TilePair, affinity_t>::value) {
+		std::cout << "There are " << rule_count << " affinity rules to parse\n";
+	}
 
-	Rules rules<rule_t>(rule_count * 3);
+	Rules<TilePair> rules(rule_count * 3);
 
 	for (int i = 0; i < rule_count; i++) {
 		std::getline(file, line);
@@ -164,7 +203,7 @@ Rules<rule_t> load(std::string filepath) {
 		// If the line begins with #, skip it.
 		if (line[0] == '#') continue;
 
-		rules.insert(parse_rule(line));
+		rules.insert(parse_rule<TilePair>(line));
 
 		if (i % 1000000 == 0 && i != 0) {
             std::cout << "Parsed " << i << " rules\n";
@@ -177,4 +216,11 @@ Rules<rule_t> load(std::string filepath) {
 
 	return rules;
 }
+
+template class Rules<transition_t>;
+template class Rules<affinity_t>;
+template Rules<transition_t> load<transition_t>(std::string filepath);
+template Rules<affinity_t> load<affinity_t>(std::string filepath);
+template transition_t parse_rule<transition_t>(std::string rule_str);
+template affinity_t parse_rule<affinity_t>(std::string rule_str);
 } // namespace Rules

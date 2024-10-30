@@ -3,8 +3,10 @@
 #include "simulator.h"
 
 namespace Simulator {
-Rules::Rules<rule_t> horizontal_transitions;
-Rules::Rules<rule_t> vertical_transitions;
+Rules::Rules<Rules::transition_t> horizontal_transitions;
+Rules::Rules<Rules::transition_t> vertical_transitions;
+Rules::Rules<Rules::affinity_t> horizontal_affinities;
+Rules::Rules<Rules::affinity_t> vertical_affinities;
 Seed::grid_t grid;
 
 void DeltaBuffer::push(delta_t delta) {
@@ -18,15 +20,19 @@ void DeltaBuffer::push(delta_t delta) {
 
 DeltaBuffer delta_buffer;
 
-void init(std::string horizontal_transitions_path, std::string vertical_transitions_path, std::string seed_path) {
-	horizontal_transitions = Rules::load(horizontal_transitions_path);
-	vertical_transitions = Rules::load(vertical_transitions_path);
+void init(std::string seed_path, std::string horizontal_transitions_path, std::string vertical_transitions_path, std::string horizontal_affinities_path, std::string vertical_affinities_path) {
 	grid = Seed::load(seed_path);
+
+	horizontal_transitions = Rules::load<Rules::transition_t>(horizontal_transitions_path);
+	vertical_transitions = Rules::load<Rules::transition_t>(vertical_transitions_path);
+
+	horizontal_affinities = Rules::load<Rules::affinity_t>(horizontal_affinities_path);
+	vertical_affinities = Rules::load<Rules::affinity_t>(vertical_affinities_path);
 }
 
 void init(std::string system_name) {
     system_name = "input/" + system_name;
-    init(system_name + ".hrules", system_name + ".vrules", system_name + ".seed");
+    init(system_name + ".seed", system_name + ".hrules", system_name + ".vrules", system_name + ".haff", system_name + ".vaff");
 }
 
 void print_grid() {
@@ -92,7 +98,7 @@ loc_t neighborhood[4] = {
 
 void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
 	for (int dir = 0; dir < 4; dir++) {
-		Rules::Rules& rules = (dir % 2 == 0) ? horizontal_transitions : vertical_transitions;
+		Rules::Rules<Rules::affinity_t>& rules = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
 
 		loc_t tile_a_location = { location.x, location.y };
 		loc_t tile_b_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
@@ -107,7 +113,7 @@ void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t
 		
 		if (Tile::is_locked(tile_a) || Tile::is_locked(tile_b)) continue;
 
-		// Rules::rule_t rule = rules.find(tile_a, tile_b);
+		// Rules::transition_t rule = rules.find(tile_a, tile_b);
 		// if (!Rules::is_valid(rule)) continue;
 
 		// Create a new tile from A-E and attach it
@@ -131,7 +137,7 @@ void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t
 
 void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
     for (int dir = 0; dir < 2; dir++) {
-		Rules::Rules& transitions = dir == 1 ? vertical_transitions : horizontal_transitions;
+		Rules::Rules<Rules::transition_t>& transitions = dir == 1 ? vertical_transitions : horizontal_transitions;
 
         if (Tile::is_locked(tile_a)) return;
 
@@ -143,7 +149,7 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
     	}
 
     	tile_t tile_b = neighbor.get(grid);
-    	Rules::transition_t transition = rules.find(tile_a, tile_b);
+    	Rules::transition_t transition = transitions.find(tile_a, tile_b);
 
     	// if (Tile::is_locked(tile_b) || !Rules::is_valid(rule)) continue;
 

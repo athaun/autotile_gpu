@@ -11,7 +11,7 @@ grid_t load(std::string filepath) {
 		throw std::runtime_error("Failed to open file");
 	}
 
-	std::vector<std::vector<uint32_t> > temp_grid;
+	std::vector<std::vector<uint32_t>> temp_grid;
 	std::string line;
 	int max_width = 0;
 
@@ -37,9 +37,11 @@ grid_t load(std::string filepath) {
 		// Ensure the grid is large enough
 		if (y >= temp_grid.size()) {
 			temp_grid.resize(y + 1);
+			temp_grid.resize(y + 1, std::vector<tile_t>(max_width, Rules::EMPTY_TILE));
+			
 		}
 		if (x >= temp_grid[y].size()) {
-			temp_grid[y].resize(x + 1);
+			temp_grid[y].resize(x + 1, Rules::EMPTY_TILE);
 		}
 
 		// Set the tile value
@@ -48,7 +50,7 @@ grid_t load(std::string filepath) {
 		std::cout  << "Seed Tile: " << tile << "\t" << temp_grid[y][x] << "\tx: " << x << "\ty: " << y << std::endl;
 
 		// Track maximum width
-		if (x + 1 > max_width) {
+		if (x >= max_width) {
 			max_width = x + 1;
 		}
 	}
@@ -68,8 +70,7 @@ grid_t load(std::string filepath) {
     grid.height = padded_height;
     grid.tiles = new tile_t[grid.width * grid.height]();
 	// Initialize the grid with a specific tile value (e.g., 0 for empty)
-	tile_t initial_tile = Rules::EMPTY_TILE; // Change this value to the desired initial tile
-	std::fill(grid.tiles, grid.tiles + grid.width * grid.height, initial_tile);
+	std::fill(grid.tiles, grid.tiles + grid.width * grid.height, Rules::EMPTY_TILE);
 
     // Copy the existing data into the new grid with padding
     for (int y = 0; y < original_height; y++) {

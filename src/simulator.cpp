@@ -32,7 +32,7 @@ void init(std::string seed_path, std::string horizontal_transitions_path, std::s
 
 void init(std::string system_name) {
     system_name = "input/" + system_name;
-    init(system_name + ".seed", system_name + ".hrules", system_name + ".vrules", system_name + ".haff", system_name + ".vaff");
+    init(system_name + ".seed", system_name + ".htrans", system_name + ".vtrans", system_name + ".haff", system_name + ".vaff");
 }
 
 void print_grid() {
@@ -40,7 +40,7 @@ void print_grid() {
     for (int y = 0; y < grid.height; y++) {
         for (int x = 0; x < grid.width; x++) {
 			if (grid.tiles[x + y * grid.width] == Rules::EMPTY_TILE) {
-				std::cout << "EMPTY\t";
+				std::cout << "[__]\t";
 				continue;
 			}
             std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << "\t";
@@ -65,9 +65,9 @@ void log_deltas(DeltaBuffer& buffer) {
 }
 
 void apply_deltas(DeltaBuffer& buffer) {
-    if (buffer.count == 0) {
-        exit(0);
-    }
+    // if (buffer.count == 0) {
+    //     exit(0);
+    // }
 
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
@@ -97,8 +97,11 @@ loc_t neighborhood[4] = {
 };
 
 void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+	if (Tile::is_locked(tile_a)) return;
+
 	for (int dir = 0; dir < 4; dir++) {
-		Rules::Rules<Rules::affinity_t>& rules = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
+
+		Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
 
 		loc_t tile_a_location = { location.x, location.y };
 		loc_t tile_b_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
@@ -108,38 +111,34 @@ void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t
 			continue;
 		}
 
-		tile_t& tile_a = tile_a_location.get(grid);
-		tile_t& tile_b = tile_b_location.get(grid);
-		
-		if (Tile::is_locked(tile_a) || Tile::is_locked(tile_b)) continue;
+		tile_t tile_b = tile_b_location.get(grid);
 
-		// Rules::transition_t rule = rules.find(tile_a, tile_b);
-		// if (!Rules::is_valid(rule)) continue;
+		if (Tile::is_locked(tile_b)) continue;
 
-		// Create a new tile from A-E and attach it
-		std::string new_tile(1, 'A' + (rand() % 5));
+		Rules::affinity_t affinity = affinities.find(tile_a, tile_b);
 
-		// In the future, check temperature here.
-		
-		// Tile::lock(grid.tiles[tile_a_location.x + tile_a_location.y * grid.width]);
-		// Tile::lock(grid.tiles[tile_b_location.x + tile_b_location.y * grid.width]);
+		Tile::lock(grid.tiles[location.x + location.y * grid.width]);
+		Tile::lock(grid.tiles[tile_b_location.x + tile_b_location.y * grid.width]);
 
 		delta_t delta = {
 			{ tile_a, tile_b },
-			{ tile_a, Tile::encode(new_tile) },
-			tile_a_location,
-			static_cast<delta_t::Direction>(dir % 2)
+			{ affinity.tile_a, affinity.tile_b },
+			location,
+			static_cast<delta_t::Direction>(dir)
 		};
+		
+		std::cout << "Possible attachment: " << Tile::decode(tile_a) << " + " << Tile::decode(tile_b) << " -> " << Tile::decode(affinity.tile_a) << " + " << Tile::decode(affinity.tile_b) << "\n";
 
 		possible_deltas.push_back(delta);
 	}
 }
 
 void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
-    for (int dir = 0; dir < 2; dir++) {
-		Rules::Rules<Rules::transition_t>& transitions = dir == 1 ? vertical_transitions : horizontal_transitions;
+	if (Tile::is_locked(tile_a)) return;
 
-        if (Tile::is_locked(tile_a)) return;
+    for (int dir = 0; dir < 2; dir++) {
+
+		Rules::Rules<Rules::transition_t>& transitions = dir == 1 ? vertical_transitions : horizontal_transitions;
 
     	loc_t neighbor = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
@@ -151,7 +150,7 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
     	tile_t tile_b = neighbor.get(grid);
     	Rules::transition_t transition = transitions.find(tile_a, tile_b);
 
-    	// if (Tile::is_locked(tile_b) || !Rules::is_valid(rule)) continue;
+    	if (Tile::is_locked(tile_b) || Rules::is_invalid(transition)) continue;
 
         Tile::lock(grid.tiles[location.x + location.y * grid.width]);
     	Tile::lock(grid.tiles[neighbor.x + neighbor.y * grid.width]);
@@ -162,6 +161,8 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
     		location,
     		static_cast<delta_t::Direction>(dir)
     	};
+
+		std::cout << "Possible transition: " << Tile::decode(tile_a) << " + " << Tile::decode(tile_b) << " -> " << Tile::decode(transition.to_a) << " + " << Tile::decode(transition.to_b) << "\n";
 
     	possible_deltas.push_back(delta);
     }
@@ -187,6 +188,9 @@ void choose_delta(std::vector<delta_t>& possible_deltas) {
 void run_serial() {
 	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
+
+	std::cout << "Initial grid state:" << std::endl;
+	print_grid();
 
 	int ticks = 0;
 	while (true) {

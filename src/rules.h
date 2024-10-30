@@ -62,6 +62,7 @@ private:
 template <typename TilePair>
 Rules<TilePair> load(std::string filepath);
 
-bool is_valid(transition_t& rule);
+template <typename TilePair>
+bool is_invalid(TilePair& rule);
 
 }

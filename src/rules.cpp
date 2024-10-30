@@ -117,16 +117,28 @@ affinity_t get_invalid_value<affinity_t>() {
 // Rules namespace functions
 //////////////////////////////////////////
 
-bool is_valid(transition_t& transition) {
-	return !(transition.tile_a == INVALID_TRANSITION.tile_a &&
-			transition.tile_b == INVALID_TRANSITION.tile_b &&
-			transition.to_a == INVALID_TRANSITION.to_a &&
-			transition.to_b == INVALID_TRANSITION.to_b);
+/**
+ * Check if a transition is valid and can be applied
+ */
+template <typename TilePair>
+bool is_invalid(TilePair& rule) {
+	return (rule.tile_a != EMPTY_TILE && rule.tile_b != EMPTY_TILE);
 }
 
+/**
+ * Parse a rule string and return a transition_t or affinity_t object
+ * @param rule_str The rule string to parse
+ * @return A transition_t or affinity_t struct
+ * 
+ */
 template <typename TilePair>
 TilePair parse_rule(std::string rule_str);
 
+/**
+ * Parse a rule in the format "A + B -> C + D" and return a transition_t struct
+ * @param rule_str The rule string to parse
+ * @return A transition_t struct
+ */
 template <>
 transition_t parse_rule(std::string rule_str) {
 	// Find the positions of the special characters
@@ -155,6 +167,11 @@ transition_t parse_rule(std::string rule_str) {
 	return { tile_a, tile_b, to_a, to_b };
 }
 
+/**
+ * Parse a rule in the format "A + B" and return an affinity_t struct
+ * @param rule_str The rule string to parse
+ * @return An affinity_t struct
+ */
 template <>
 affinity_t parse_rule(std::string rule_str) {
 	// Find the positions of the special characters
@@ -176,6 +193,23 @@ affinity_t parse_rule(std::string rule_str) {
 	return { tile_a, tile_b };
 }
 
+/**
+ * Load rules from a file and return a Rules object of either transition_t or affinity_t
+ * @param filepath The path to the file containing the rules, either a .htrans, .vtrans, or .haff, .vaff file.
+ * 
+ * Rule files are always located in the input/ directory.
+ * 
+ * Transition files are formatted as:
+ * <number of rules> Transitions
+ * A + B -> C + D
+ * 
+ * Affinity files are formatted as:
+ * <number of rules> Affinities
+ * A + B
+ * 
+ * @return A Rules object containing the parsed rules
+ * 
+ */
 template <typename TilePair>
 Rules<TilePair> load(std::string filepath) {
 	std::ifstream file(filepath);
@@ -223,4 +257,7 @@ template Rules<transition_t> load<transition_t>(std::string filepath);
 template Rules<affinity_t> load<affinity_t>(std::string filepath);
 template transition_t parse_rule<transition_t>(std::string rule_str);
 template affinity_t parse_rule<affinity_t>(std::string rule_str);
+template bool is_invalid(transition_t& rule);
+template bool is_invalid(affinity_t& rule);
+
 } // namespace Rules

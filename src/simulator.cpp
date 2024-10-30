@@ -3,8 +3,8 @@
 #include "simulator.h"
 
 namespace Simulator {
-Rules::Rules horizontal_rules;
-Rules::Rules vertical_rules;
+Rules::Rules<rule_t> horizontal_transitions;
+Rules::Rules<rule_t> vertical_transitions;
 Seed::grid_t grid;
 
 void DeltaBuffer::push(delta_t delta) {
@@ -18,9 +18,9 @@ void DeltaBuffer::push(delta_t delta) {
 
 DeltaBuffer delta_buffer;
 
-void init(std::string horizontal_rules_path, std::string vertical_rules_path, std::string seed_path) {
-	horizontal_rules = Rules::load(horizontal_rules_path);
-	vertical_rules = Rules::load(vertical_rules_path);
+void init(std::string horizontal_transitions_path, std::string vertical_transitions_path, std::string seed_path) {
+	horizontal_transitions = Rules::load(horizontal_transitions_path);
+	vertical_transitions = Rules::load(vertical_transitions_path);
 	grid = Seed::load(seed_path);
 }
 
@@ -33,6 +33,10 @@ void print_grid() {
     std::cout << "\n";
     for (int y = 0; y < grid.height; y++) {
         for (int x = 0; x < grid.width; x++) {
+			if (grid.tiles[x + y * grid.width] == Rules::EMPTY_TILE) {
+				std::cout << "EMPTY\t";
+				continue;
+			}
             std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << "\t";
         }
         std::cout << "\n";
@@ -87,14 +91,49 @@ loc_t neighborhood[4] = {
 };
 
 void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+	for (int dir = 0; dir < 4; dir++) {
+		Rules::Rules& rules = (dir % 2 == 0) ? horizontal_transitions : vertical_transitions;
 
+		loc_t tile_a_location = { location.x, location.y };
+		loc_t tile_b_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
+
+		// Check if the neighbor location is out of bounds
+		if (tile_b_location.x < 0 || tile_b_location.x >= grid.width || tile_b_location.y < 0 || tile_b_location.y >= grid.height) {
+			continue;
+		}
+
+		tile_t& tile_a = tile_a_location.get(grid);
+		tile_t& tile_b = tile_b_location.get(grid);
+		
+		if (Tile::is_locked(tile_a) || Tile::is_locked(tile_b)) continue;
+
+		// Rules::rule_t rule = rules.find(tile_a, tile_b);
+		// if (!Rules::is_valid(rule)) continue;
+
+		// Create a new tile from A-E and attach it
+		std::string new_tile(1, 'A' + (rand() % 5));
+
+		// In the future, check temperature here.
+		
+		// Tile::lock(grid.tiles[tile_a_location.x + tile_a_location.y * grid.width]);
+		// Tile::lock(grid.tiles[tile_b_location.x + tile_b_location.y * grid.width]);
+
+		delta_t delta = {
+			{ tile_a, tile_b },
+			{ tile_a, Tile::encode(new_tile) },
+			tile_a_location,
+			static_cast<delta_t::Direction>(dir % 2)
+		};
+
+		possible_deltas.push_back(delta);
+	}
 }
 
 void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
     for (int dir = 0; dir < 2; dir++) {
-		Rules::Rules& rules = dir == 1 ? vertical_rules : horizontal_rules;
+		Rules::Rules& transitions = dir == 1 ? vertical_transitions : horizontal_transitions;
 
-        if (Tile::is_locked(tile_a)) continue;
+        if (Tile::is_locked(tile_a)) return;
 
     	loc_t neighbor = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
@@ -104,17 +143,16 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
     	}
 
     	tile_t tile_b = neighbor.get(grid);
-    	Rules::rule_t rule = rules.find(tile_a, tile_b);
+    	Rules::transition_t transition = rules.find(tile_a, tile_b);
 
-    	if (Tile::is_locked(tile_b)) continue;
-    	if (!Rules::is_valid(rule)) continue;
+    	// if (Tile::is_locked(tile_b) || !Rules::is_valid(rule)) continue;
 
         Tile::lock(grid.tiles[location.x + location.y * grid.width]);
     	Tile::lock(grid.tiles[neighbor.x + neighbor.y * grid.width]);
 
     	delta_t delta = {
     		{ tile_a, tile_b },
-    		{ rule.to_1, rule.to_2 },
+    		{ transition.to_a, transition.to_b },
     		location,
     		static_cast<delta_t::Direction>(dir)
     	};
@@ -131,6 +169,12 @@ void choose_delta(std::vector<delta_t>& possible_deltas) {
     if (possible_deltas.empty()) return;
 
    	delta_buffer.push(possible_deltas[rand() % possible_deltas.size()]);
+
+	for (delta_t& delta : possible_deltas) {
+		Tile::unlock(delta.before.tile_a);
+		Tile::unlock(delta.before.tile_b);
+	}
+
     possible_deltas.clear();
 }
 

@@ -1,0 +1,20 @@
+19 Affinities
+seed+Nl,1
+Nl.**W*.P.seed'+seed',1
+seed'.Nl+Nl',1
+seed'.**W*.Nl'+Nl',1
+Et''+NW''.***W.F.E'',1
+seed'.**W*.NE'+NE',1
+NcE'.**W*.E'+E',1
+E'.**W*.Nl'+Nl',1
+Et'+NW'.***W.Et',1
+W''.*M**+NW''.***W.W'',1
+NW''.*M**+W''.*W**.NW'',1
+Et''+NcW''.*W**.Et'',1
+Et''+NW''.***W.Et'',1
+E'.**W*.NE'+NE'.**M*,1
+W'.*M**+NW'.***W.W',1
+NW'.*M**+W'.*W**.NW',1
+Et'+NW'.*W**.Et',1
+W''.*M**+NcW''.*W**.W'',1
+W'.*M**+NW'.*W**.W',1

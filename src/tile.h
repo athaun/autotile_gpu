@@ -5,9 +5,9 @@
 typedef uint32_t tile_t;
 namespace Tile {
     tile_t encode(const std::string& str);
-    std::string decode(uint32_t value);
+    std::string decode(tile_t value);
 
-    void lock(uint32_t& tile);
-    void unlock(uint32_t& tile);
-    bool is_locked(uint32_t tile);
+    void lock(tile_t& tile);
+    void unlock(tile_t& tile);
+    bool is_locked(tile_t tile);
 } // namespace Tile

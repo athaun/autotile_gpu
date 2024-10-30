@@ -57,16 +57,26 @@ grid_t load(std::string filepath) {
 
 	file.close();
 
-	// Allocate and copy the grid data
-	grid.width = max_width;
-	grid.height = temp_grid.size();
-	grid.tiles = new uint32_t[grid.width * grid.height]();
+	int original_width = max_width;
+    int original_height = temp_grid.size();
+    int padding = 2 * std::max(original_width, original_height);
+	int padded_width = original_width + 2 * padding;
+	int padded_height = original_height + 2 * padding;
 
-	for (int y = 0; y < grid.height; ++y) {
-		for (int x = 0; x < grid.width; ++x) {
-			grid.tiles[y * grid.width + x] = temp_grid[y][x];
-		}
-	}
+    // Allocate the new grid with padding
+    grid.width = padded_width;
+    grid.height = padded_height;
+    grid.tiles = new tile_t[grid.width * grid.height]();
+	// Initialize the grid with a specific tile value (e.g., 0 for empty)
+	tile_t initial_tile = Rules::EMPTY_TILE; // Change this value to the desired initial tile
+	std::fill(grid.tiles, grid.tiles + grid.width * grid.height, initial_tile);
+
+    // Copy the existing data into the new grid with padding
+    for (int y = 0; y < original_height; y++) {
+        for (int x = 0; x < original_width; x++) {
+            grid.tiles[(y + padding) * grid.width + (x + padding)] = temp_grid[y][x];
+        }
+    }
 
 	return grid;
 }

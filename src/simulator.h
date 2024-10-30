@@ -7,8 +7,8 @@ namespace Simulator {
     struct loc_t {
         int x;
         int y;
-        tile_t get(Seed::grid_t grid) const {
-            return grid.tiles[x + y * grid.width];
+        tile_t& get(Seed::grid_t grid) const {
+        return grid.tiles[x + y * grid.width];
         }
     };
 
@@ -39,7 +39,7 @@ namespace Simulator {
         void push(delta_t delta);
     };
 
-    void init(std::string horizontal_rules_path, std::string vertical_rules_path, std::string seed_path);
+    void init(std::string horizontal_transitions_path, std::string vertical_transitions_path, std::string seed_path);
     void init(std::string system_name);
     void log_deltas(DeltaBuffer& buffer);
     void run_serial();

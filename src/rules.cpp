@@ -33,7 +33,7 @@ void Rules<TilePair>::insert(const TilePair& rule) {
 
 template <typename TilePair>
 size_t Rules<TilePair>::find_index(tile_t tile_a, tile_t tile_b) {
-	uint64_t index = hash_rule(tile_a, tile_b) % table.size();
+	uint64_t index = hash_rule({tile_a, tile_b}) % table.size();
 	int probes = 0;
 
 	// Loop until an empty slot is found or the table is full
@@ -66,21 +66,19 @@ double Rules<TilePair>::load_factor() {
 //////////////////////////////////////////
 // Rules private members
 //////////////////////////////////////////
-
-template <typename TilePair>
-uint64_t Rules<TilePair>::hash_rule(const tile_t tile_a, const tile_t tile_b) {
-	uint64_t hash = 0x811c9dc5;
-	hash ^= tile_a;
-	hash *= 0x01000193;
-	hash ^= tile_b;
-	hash *= 0x01000193;
-
-	return hash;
-}
-
 template <typename TilePair>
 uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
-	return hash_rule(rule.tile_a, rule.tile_b);
+	uint64_t hash = 0x811c9dc5;
+	if constexpr (std::is_same<TilePair, transition_t>::value) {
+		hash ^= rule.tile_a;
+		hash *= 0x01000193;
+		hash ^= rule.tile_b;
+		hash *= 0x01000193;
+	} else if constexpr (std::is_same<TilePair, affinity_t>::value) {
+		hash ^= rule.tile_a;
+		hash *= 0x01000193;
+	}
+	return hash;
 }
 
 template <typename TilePair>

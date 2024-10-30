@@ -65,9 +65,9 @@ void log_deltas(DeltaBuffer& buffer) {
 }
 
 void apply_deltas(DeltaBuffer& buffer) {
-    // if (buffer.count == 0) {
-    //     exit(0);
-    // }
+    if (buffer.count == 0) {
+        exit(0);
+    }
 
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];

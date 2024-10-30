@@ -49,7 +49,6 @@ public:
 	std::vector<TilePair> table;
 
 private:
-	uint64_t hash_rule(const tile_t tile_a, const tile_t tile_b);
 	uint64_t hash_rule(const TilePair& rule);
 
 	// Resize the table when load factor exceeds the limit

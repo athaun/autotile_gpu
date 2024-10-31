@@ -13,17 +13,10 @@ void Rules<TilePair>::insert(const TilePair& rule) {
 		std::cout << "Resized table to " << table.size() << " elements\n";
 	}
 
-	size_t index = hash_rule(rule) % table.size();
-	int probes = 0;
+	size_t index = find_index(rule.tile_a, rule.tile_b);
 
-	// Loop until an empty slot is found or the table is full
-	while (table[index].tile_a != EMPTY_TILE && probes < table.size()) {
-		probes++;
-		index = (index + probes * probes) % table.size(); // Quadratic probing
-	}
-
-	if (probes == table.size()) {
-		std::cerr << "Error: Hash table overflow\n";
+	if (index == table.size()) {
+		std::cout << "BUG\n";
 		return;
 	}
 
@@ -43,6 +36,7 @@ size_t Rules<TilePair>::find_index(tile_t tile_a, tile_t tile_b) {
 	}
 
 	if (probes == table.size() || table[index].tile_a == EMPTY_TILE) {
+		std::cout << "BUG 2\n";
 		return table.size();
 	}
 
@@ -78,6 +72,14 @@ uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
 		hash ^= rule.tile_a;
 		hash *= 0x01000193;
 	}
+
+	/*
+	if constexpr (std::is_same<TilePair, transition_t>::value) {
+		hash = std::hash<tile_t>{}(rule.tile_a) ^ std::hash<tile_t>{}(rule.tile_b);
+	} else if constexpr (std::is_same<TilePair, affinity_t>::value) {
+		hash = std::hash<tile_t>{}(rule.tile_a);
+	}
+	*/
 	return hash;
 }
 

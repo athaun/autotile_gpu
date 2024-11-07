@@ -21,11 +21,13 @@ namespace Simulator {
         tile_pair_t before;
         tile_pair_t after;
         loc_t location_a;
-        enum Direction {
-            HORIZONTAL,
-            VERTICAL
+        loc_t location_b;
+
+        enum Type {
+            ATTACHMENT,
+            TRANSITION
         };
-        Direction dir;
+        Type type;
     };
 
     constexpr size_t MAX_DELTAS = 1024;

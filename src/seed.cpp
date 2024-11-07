@@ -11,11 +11,15 @@ grid_t load(std::string filepath) {
 		throw std::runtime_error("Failed to open file");
 	}
 
-	std::vector<std::vector<uint32_t>> temp_grid;
-	std::string line;
-	int max_width = 0;
+	int min_x = std::numeric_limits<int>::max();
+	int min_y = std::numeric_limits<int>::max();
+	int max_x = 0;
+	int max_y = 0;
+	std::vector<std::tuple<int, int, std::string>> seed_data;
 
-	// Read file line by line
+	std::string line;
+
+	// Read file line by line to find bounds
 	while (std::getline(file, line)) {
 		std::istringstream iss(line);
 
@@ -25,59 +29,40 @@ grid_t load(std::string filepath) {
 		// Parse the line
 		std::getline(iss, tile, ',');
 
-		// Skip empty lines
-		if (tile.empty()) continue;
-
-        // Skip lines beginning with #
-        if (tile[0] == '#') continue;
+		if (tile[0] == '#' || tile.empty()) continue;
 
 		char comma;
-        iss >> x >> comma >> y;
+		iss >> x >> comma >> y;
 
-		// Ensure the grid is large enough
-		if (y >= temp_grid.size()) {
-			temp_grid.resize(y + 1);
-			temp_grid.resize(y + 1, std::vector<tile_t>(max_width, Rules::EMPTY_TILE));
-			
-		}
-		if (x >= temp_grid[y].size()) {
-			temp_grid[y].resize(x + 1, Rules::EMPTY_TILE);
-		}
+		seed_data.emplace_back(x, y, tile);
 
-		// Set the tile value
-		temp_grid[y][x] = Tile::encode(tile);
-
-		std::cout  << "Seed Tile: " << tile << "\t" << temp_grid[y][x] << "\tx: " << x << "\ty: " << y << std::endl;
-
-		// Track maximum width
-		if (x >= max_width) {
-			max_width = x + 1;
-		}
+		// Track bounds
+		if (x < min_x) min_x = x;
+		if (y < min_y) min_y = y;
+		if (x > max_x) max_x = x;
+		if (y > max_y) max_y = y;
 	}
-
-	std::cout << "\nFinished loading seed, size: " << max_width << "x" << temp_grid.size() << "\n\n";
 
 	file.close();
 
-	int original_width = max_width;
-    int original_height = temp_grid.size();
-    int padding = 2 * std::max(original_width, original_height);
+	int original_width = max_x - min_x + 1;
+	int original_height = max_y - min_y + 1;
+	int padding = 2 * std::max(original_width, original_height);
 	int padded_width = original_width + 2 * padding;
 	int padded_height = original_height + 2 * padding;
 
-    // Allocate the new grid with padding
-    grid.width = padded_width;
-    grid.height = padded_height;
-    grid.tiles = new tile_t[grid.width * grid.height]();
+	// Allocate the new grid with padding
+	grid.width = padded_width;
+	grid.height = padded_height;
+	grid.tiles = new tile_t[grid.width * grid.height]();
 	// Initialize the grid with a specific tile value (e.g., 0 for empty)
 	std::fill(grid.tiles, grid.tiles + grid.width * grid.height, Rules::EMPTY_TILE);
 
-    // Copy the existing data into the new grid with padding
-    for (int y = 0; y < original_height; y++) {
-        for (int x = 0; x < original_width; x++) {
-            grid.tiles[(y + padding) * grid.width + (x + padding)] = temp_grid[y][x];
-        }
-    }
+	// Copy the seed data into the new grid with padding
+	for (const auto& [x, y, tile] : seed_data) {
+		grid.tiles[(y - min_y + padding) * grid.width + (x - min_x + padding)] = Tile::encode(tile);
+		std::cout << "Seed Tile: " << tile << "\t" << Tile::encode(tile) << "\tx: " << x << "\ty: " << y << std::endl;
+	}
 
 	return grid;
 }

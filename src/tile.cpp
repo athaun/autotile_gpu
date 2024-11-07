@@ -10,6 +10,7 @@ uint32_t encode(const std::string& str) {
 }
 
 std::string decode(uint32_t value) {
+	if (value == Rules::EMPTY_TILE) return "[__]";
 	std::string result;
 	for (size_t i = 0; i < sizeof(uint32_t); i++) {
 		result += (char)(value >> (i * 8)); // Unpack each character

@@ -38,10 +38,10 @@ void print_grid() {
     for (int y = 0; y < grid.height; y++) {
         for (int x = 0; x < grid.width; x++) {
 			if (grid.tiles[x + y * grid.width] == Rules::EMPTY_TILE) {
-				std::cout << "[__]\t";
+				std::cout << "[__] ";
 				continue;
 			}
-            std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << "\t";
+            std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << " ";
         }
         std::cout << "\n";
     }

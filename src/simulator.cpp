@@ -67,6 +67,12 @@ void apply_deltas(DeltaBuffer& buffer) {
 		return;
     }
 
+    std::ofstream delta_file("deltas.txt", std::ios::app);  // Open in append mode
+	if (!delta_file.is_open()) {
+        std::cerr << "Error: Could not open file for writing deltas." << std::endl;
+        return;
+    }
+
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
 
@@ -76,7 +82,13 @@ void apply_deltas(DeltaBuffer& buffer) {
 		// This assignment will unlock the tile by overwriting the lock bit
 		tile_a = delta.after.tile_a;
 		tile_b = delta.after.tile_b;
+
+		delta_file << "(" << delta.location_a.x << ", " << delta.location_a.y << ") "
+				  << Tile::decode(delta.before.tile_a) << "+" << Tile::decode(delta.before.tile_b)
+				  << "->" << Tile::decode(delta.after.tile_a) << "+" << Tile::decode(delta.after.tile_b) << " " << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment)" : "(Transition)") << "\n";
 	}
+
+	delta_file.close();
 
 	// Print the grid
 	std::cout << "\nApplied deltas:";
@@ -95,45 +107,97 @@ loc_t neighborhood[4] = {
     { 0, -1 }, // Up
 };
 
-void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
-	for (int dir = 0; dir < 4; dir++) {
+void check_attachment(tile_t& existing_tile, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+    for (int dir = 0; dir < 4; dir++) {
 
-		Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
+        // Select the appropriate set of affinities based on direction
+        Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
 
-		loc_t tile_a_location = { location.x, location.y };
-		loc_t tile_b_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
+        loc_t existing_tile_location = { location.x, location.y };
+        loc_t new_tile_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
-		// Check if the neighbor location is out of bounds
-		if (tile_b_location.x < 0 || tile_b_location.x >= grid.width || tile_b_location.y < 0 || tile_b_location.y >= grid.height) {
-			continue;
+        // Check if the neighbor location is out of bounds
+        if (new_tile_location.x < 0 || new_tile_location.x >= grid.width || new_tile_location.y < 0 || new_tile_location.y >= grid.height) {
+            continue;
+        }
+
+        // Get the tile at the neighbor location
+        tile_t new_tile = new_tile_location.get(grid);
+
+        // If the neighboring tile is empty, skip
+        if (new_tile == Rules::EMPTY_TILE) continue;
+
+        // Determine the correct orientation based on direction and affinity
+        Rules::affinity_t affinity;
+		tile_pair_t new_pair;
+        if (dir == 0 || dir == 1) {
+			affinity = affinities.find(existing_tile, new_tile);
+			new_pair = { affinity.tile_b, affinity.tile_a };
+		} else if (dir == 2 || dir == 3) {
+			affinity = affinities.find(new_tile, existing_tile);
+			new_pair = { affinity.tile_a, affinity.tile_b };
 		}
 
-		tile_t tile_b = tile_b_location.get(grid);
+        // If the affinity is invalid, skip this iteration
+        if (Rules::is_invalid(affinity)) continue;
 
-		if (tile_b == Rules::EMPTY_TILE) continue;
+        // Lock the tiles
+        Tile::lock(grid.tiles[location.x + location.y * grid.width]);
+        Tile::lock(grid.tiles[new_tile_location.x + new_tile_location.y * grid.width]);
 
-		Rules::affinity_t affinity = affinities.find(tile_b, tile_a);
+        // Construct the delta for attachment
+        delta_t delta = {
+            { existing_tile, new_tile },
+            new_pair,
+            new_tile_location,
+            existing_tile_location,
+            delta_t::Type::ATTACHMENT
+        };
 
-		// std::cout << "Checking attachment: " << Tile::decode(tile_b) << " : " << Tile::decode(affinity.tile_a) << " + " << Tile::decode(affinity.tile_b) << "\n";
-		
-		if (Rules::is_invalid(affinity)) continue;
-
-		Tile::lock(grid.tiles[location.x + location.y * grid.width]);
-		Tile::lock(grid.tiles[tile_b_location.x + tile_b_location.y * grid.width]);
-
-		delta_t delta = {
-			{ tile_a, tile_b },
-			{ affinity.tile_a, affinity.tile_b },
-			tile_b_location,
-			tile_a_location,
-			delta_t::Type::ATTACHMENT
-		};
-		
-		// std::cout << "Possible attachment: " << Tile::decode(tile_a) << " + " << Tile::decode(tile_b) << " -> " << Tile::decode(affinity.tile_a) << " + " << Tile::decode(affinity.tile_b) << "\n";
-
-		possible_deltas.push_back(delta);
-	}
+        // Add the valid delta to the list of possible deltas
+        possible_deltas.push_back(delta);
+    }
 }
+
+// void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+// 	for (int dir = 0; dir < 4; dir++) {
+
+// 		Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
+
+// 		loc_t tile_a_location = { location.x, location.y };
+// 		loc_t tile_b_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
+
+// 		// Check if the neighbor location is out of bounds
+// 		if (tile_b_location.x < 0 || tile_b_location.x >= grid.width || tile_b_location.y < 0 || tile_b_location.y >= grid.height) {
+// 			continue;
+// 		}
+
+// 		tile_t tile_b = tile_b_location.get(grid);
+
+// 		if (tile_b == Rules::EMPTY_TILE) continue;
+
+// 		Rules::affinity_t affinity = affinities.find(tile_b, tile_a);
+
+// 		// std::cout << "Checking attachment: " << Tile::decode(tile_b) << " : " << Tile::decode(affinity.tile_a) << " + " << Tile::decode(affinity.tile_b) << "\n";
+		
+// 		if (Rules::is_invalid(affinity)) continue;
+
+// 		Tile::lock(grid.tiles[location.x + location.y * grid.width]);
+// 		Tile::lock(grid.tiles[tile_b_location.x + tile_b_location.y * grid.width]);
+
+// 		delta_t delta = {
+// 			{ tile_a, tile_b },
+// 			{ affinity.tile_a, affinity.tile_b },
+// 			tile_b_location,
+// 			tile_a_location,
+// 			delta_t::Type::ATTACHMENT
+// 		};
+		
+// 		// std::cout << "Possible attachment: " << Tile::decode(tile_a) << " + " << Tile::decode(tile_b) << " -> " << Tile::decode(affinity.tile_a) << " + " << Tile::decode(affinity.tile_b) << "\n";
+
+// 		possible_deltas.push_back(delta);
+// 	}
+// }
 
 void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
 	if (Tile::is_locked(tile_a)) return;

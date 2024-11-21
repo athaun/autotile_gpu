@@ -55,7 +55,11 @@ void log_deltas(DeltaBuffer& buffer) {
 		const delta_t& delta = buffer.deltas[i];
 		std::cout << "(" << delta.location_a.x << ", " << delta.location_a.y << ", "
 				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
-				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b) << " " << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment)" : "(Transition)") << "\n";
+				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b) << " " << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
+		if (delta.note.length() != 0) {
+			std::cout << delta.note;
+		}
+		std::cout << "\n";
 	}
 
 	print_grid();
@@ -107,57 +111,89 @@ loc_t neighborhood[4] = {
     { 0, -1 }, // Up
 };
 
-void check_attachment(tile_t& existing_tile, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<delta_t>& possible_deltas) {
     for (int dir = 0; dir < 4; dir++) {
-
         // Select the appropriate set of affinities based on direction
         Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
 
-        loc_t existing_tile_location = { location.x, location.y };
-        loc_t new_tile_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
+		std::string note = (dir % 2 == 0) ? "haff" : "vaff";
+
+        loc_t neighbor_tile_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
         // Check if the neighbor location is out of bounds
-        if (new_tile_location.x < 0 || new_tile_location.x >= grid.width || new_tile_location.y < 0 || new_tile_location.y >= grid.height) {
+        if (neighbor_tile_location.x < 0 || neighbor_tile_location.x >= grid.width || 
+            neighbor_tile_location.y < 0 || neighbor_tile_location.y >= grid.height) {
             continue;
         }
 
         // Get the tile at the neighbor location
-        tile_t new_tile = new_tile_location.get(grid);
+        tile_t neighbor_tile = neighbor_tile_location.get(grid);
 
-        // If the neighboring tile is empty, skip
-        if (new_tile == Rules::EMPTY_TILE) continue;
-
-        // Determine the correct orientation based on direction and affinity
-        Rules::affinity_t affinity;
-		tile_pair_t new_pair;
-        if (dir == 0 || dir == 1) {
-			affinity = affinities.find(existing_tile, new_tile);
-			new_pair = { affinity.tile_b, affinity.tile_a };
-		} else if (dir == 2 || dir == 3) {
-			affinity = affinities.find(new_tile, existing_tile);
-			new_pair = { affinity.tile_a, affinity.tile_b };
+		// Ensure that both tiles are not empty, there is nothing to attach to
+		if (center_tile == Rules::EMPTY_TILE && neighbor_tile == Rules::EMPTY_TILE) {
+			continue;
 		}
+
+		// Ensure both tiles are not already filled, there is no space to attach
+		if (center_tile != Rules::EMPTY_TILE && neighbor_tile != Rules::EMPTY_TILE) {
+			continue;
+		}
+
+		// Ensure neither tile is locked
+		if ((Tile::is_locked(center_tile) && center_tile != Rules::EMPTY_TILE) || 
+			(Tile::is_locked(neighbor_tile) && neighbor_tile != Rules::EMPTY_TILE)) {
+			continue;
+		}
+
+        // Determine the correct orientation based on direction
+        Rules::affinity_t affinity;
+        if (dir == 0) {
+            // Right: center_tile is `tile_a`
+            affinity = affinities.find(center_tile, true);
+            note += "-right";
+			std::swap(affinity.tile_a, affinity.tile_b);
+        } else if (dir == 1) {
+            // Down: center_tile is `tile_a`
+            affinity = affinities.find(center_tile, true);
+            note += "-down";
+			std::swap(affinity.tile_a, affinity.tile_b);
+        } else if (dir == 2) {
+            // Left: center_tile is `tile_b`
+            affinity = affinities.find(neighbor_tile, false);
+			// std::swap(affinity.tile_a, affinity.tile_b);
+            note += "-left";
+        } else if (dir == 3) {
+            // Up: center_tile is `tile_b`
+            affinity = affinities.find(neighbor_tile, false);
+			// std::swap(affinity.tile_a, affinity.tile_b);
+            note += "-up";
+        }
+
+		note += " of center tile: " + Tile::decode(center_tile);
 
         // If the affinity is invalid, skip this iteration
         if (Rules::is_invalid(affinity)) continue;
 
         // Lock the tiles
         Tile::lock(grid.tiles[location.x + location.y * grid.width]);
-        Tile::lock(grid.tiles[new_tile_location.x + new_tile_location.y * grid.width]);
+        Tile::lock(grid.tiles[neighbor_tile_location.x + neighbor_tile_location.y * grid.width]);
 
         // Construct the delta for attachment
         delta_t delta = {
-            { existing_tile, new_tile },
-            new_pair,
-            new_tile_location,
-            existing_tile_location,
-            delta_t::Type::ATTACHMENT
+            { center_tile, neighbor_tile },
+            { affinity.tile_a, affinity.tile_b },
+            neighbor_tile_location,
+            { location.x, location.y },
+            delta_t::Type::ATTACHMENT,
+			note
         };
 
         // Add the valid delta to the list of possible deltas
         possible_deltas.push_back(delta);
+
     }
 }
+
 
 // void check_attachment(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
 // 	for (int dir = 0; dir < 4; dir++) {
@@ -268,17 +304,8 @@ void run_serial() {
 		loc_t location = { rand() % grid.width, rand() % grid.height };
 		tile_t tile_a = grid.tiles[location.x + location.y * grid.width];
 
-		if (tile_a == Rules::EMPTY_TILE) {
-			check_attachment(tile_a, location, possible_deltas);
-		} else {
-		    check_transitions(tile_a, location, possible_deltas);
-		}
-
-		// std::cout << vertical_affinities.find_index(Tile::encode("DhIR"), Tile::encode("XTNi")) << " - vertical affinities\n";
-		// std::cout << horizontal_affinities.find_index(Tile::encode("DhIR"), Tile::encode("XTNi")) << " - horizontal affinities\n";
-		// std::cout << vertical_transitions.find_index(Tile::encode("DhIR"), Tile::encode("XTNi")) << " - vertical transitions\n";
-		// std::cout << horizontal_transitions.find_index(Tile::encode("DhIR"), Tile::encode("XTNi")) << " - horizontal transitions\n";
-		// std::cout << "========================\n";
+		check_transitions(tile_a, location, possible_deltas);
+		check_attachment(tile_a, location, possible_deltas);
 
 		choose_delta(possible_deltas);
 

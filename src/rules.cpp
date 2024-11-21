@@ -129,24 +129,68 @@ namespace Rules {
 // Insert a rule into the hash table
 template <typename TilePair>
 void Rules<TilePair>::insert(const TilePair& rule) {
-    uint64_t key = hash_rule(rule);
-    table[key] = rule;
-    num_elements++;
+
+	if constexpr (std::is_same<TilePair, affinity_t>::value) {
+		TilePair temp_rule = {rule.tile_a, rule.tile_b};
+		temp_rule.hash_tile_a = true;
+		table[hash_rule(temp_rule)] = temp_rule;
+
+		temp_rule.hash_tile_a = false;
+		table_b[hash_rule(temp_rule)] = temp_rule;
+
+		num_elements ++;
+	} else {
+		table[hash_rule(rule)] = rule;
+		num_elements++;
+	}
 }
 
 // Find a rule in the hash table
-template <typename TilePair>
-TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b) {
-    TilePair temp_rule = {tile_a, tile_b};
-    uint64_t key = hash_rule(temp_rule);
+// template <typename TilePair>
+// TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b) {
+//     TilePair temp_rule = {tile_a, tile_b};
+//     uint64_t key = hash_rule(temp_rule);
 
-    auto it = table.find(key);
-    if (it != table.end()) {
-        return it->second;
-    } else {
-        return get_invalid_value<TilePair>();
-    }
+//     auto it = table.find(key);
+//     if (it != table.end()) {
+//         return it->second;
+//     } else {
+//         return get_invalid_value<TilePair>();
+//     }
+// }
+
+template <typename TilePair>
+TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b, bool use_tile_a) {
+	uint64_t key;
+	TilePair temp_rule = {tile_a, tile_b};
+
+    if constexpr (std::is_same<TilePair, affinity_t>::value) {
+        temp_rule.hash_tile_a = use_tile_a;
+	}
+	key = hash_rule(temp_rule);
+
+	if constexpr (std::is_same<TilePair, affinity_t>::value) {
+		if (!use_tile_a) {
+			auto it = table_b.find(key);
+			if (it != table_b.end()) {
+				return it->second;
+			}
+		} else {
+			auto it = table.find(key);
+			if (it != table.end()) {
+				return it->second;
+			}
+		}
+	} else {
+		auto it = table.find(key);
+		if (it != table.end()) {
+			return it->second;
+		}
+	}
+
+    return get_invalid_value<TilePair>();
 }
+
 
 // Get the load factor of the table
 template <typename TilePair>
@@ -164,7 +208,9 @@ uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
         hash ^= rule.tile_b;
         hash *= 0x100000001b3;
     } else if constexpr (std::is_same<TilePair, affinity_t>::value) {
-        hash ^= rule.tile_a;
+		if (rule.hash_tile_a) hash ^= rule.tile_a;
+		else hash ^= rule.tile_b;
+
         hash *= 0x100000001b3;
     }
     return hash;

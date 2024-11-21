@@ -16,6 +16,7 @@ struct transition_t {
 struct affinity_t {
 	tile_t tile_a;
 	tile_t tile_b;
+    bool hash_tile_a;
 };
 
 // Constants for invalid values
@@ -32,11 +33,12 @@ public:
     Rules(size_t capacity = 0) : num_elements(0) {}
 
     void insert(const TilePair& rule);
-    TilePair find(tile_t tile_a, tile_t tile_b);
+    TilePair find(tile_t tile_a, tile_t tile_b, bool use_tile_a = true);
     double load_factor() const;
 
 private:
     std::unordered_map<uint64_t, TilePair> table;
+    std::unordered_map<uint64_t, TilePair> table_b; // used for affinities as a tile_b hash
     size_t num_elements;
 
     uint64_t hash_rule(const TilePair& rule);

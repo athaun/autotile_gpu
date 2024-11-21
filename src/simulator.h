@@ -28,6 +28,7 @@ namespace Simulator {
             TRANSITION
         };
         Type type;
+        std::string note;
     };
 
     constexpr size_t MAX_DELTAS = 1024;

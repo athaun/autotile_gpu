@@ -1,0 +1,3 @@
+[submodule "lib/kompute"]
+	path = lib/kompute
+	url = https://github.com/KomputeProject/kompute.git

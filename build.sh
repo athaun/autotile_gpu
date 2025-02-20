@@ -5,7 +5,8 @@ SOURCE_DIR="src"
 BUILD_DIR="build"
 
 compile() {
-
+    
+    rm -r ./build/
     mkdir -p $BUILD_DIR
     cd $BUILD_DIR
 
@@ -40,11 +41,14 @@ case "$1" in
         compile $2
         run
         ;;
+    "runonly")
+        run
+	;;
     "clean")
         clean
         ;;
     *)
-        echo "Usage: $0 [compile | run | clean] [num_cores]"
+        echo "Usage: $0 [compile | run | runonly | clean] [num_cores]"
         exit 1
         ;;
 esac

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(AutoTile)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 
 # Options
 option(KOMPUTE_OPT_GIT_TAG "The tag of the repo to use for the example" v0.9.0)

@@ -317,7 +317,7 @@ void run_serial() {
 }
 
 void run_parallel() {
-	kp::Manager mgr;
+/*	kp::Manager mgr;
 
 	std::shared_ptr<kp::TensorT<float> > tensorInA = mgr.tensor({ 2.0, 4.0, 6.0 });
 	std::shared_ptr<kp::TensorT<float> > tensorInB = mgr.tensor({ 0.0, 1.0, 2.0 });
@@ -343,6 +343,6 @@ void run_parallel() {
 
 	if (tensorOut->vector() != std::vector<float>{ 0, 4, 12 }) {
 		throw std::runtime_error("Result does not match");
-	}
+	}*/
 }
 } // namespace Simulator

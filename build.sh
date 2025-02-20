@@ -6,7 +6,6 @@ BUILD_DIR="build"
 
 compile() {
     
-    rm -r ./build/
     mkdir -p $BUILD_DIR
     cd $BUILD_DIR
 

@@ -2,130 +2,6 @@
 
 namespace Rules {
 
-//////////////////////////////////////////
-// Rules implementation
-//////////////////////////////////////////
-
-// template <typename TilePair>
-// Rules<TilePair>::Rules(size_t capacity) : num_elements(0) {
-// 	table = std::vector<TilePair>(next_prime(capacity), get_invalid_value<TilePair>());
-// }
-
-// template <typename TilePair>
-// void Rules<TilePair>::insert(const TilePair& rule) {
-// 	if (load_factor() > 0.6) {
-// 		resize(next_prime(table.size() * 3)); // Resize if load factor exceeds 0.7
-// 		std::cout << "Resized table to " << table.size() << " elements\n";
-// 	}
-
-// 	size_t index = find_index(rule.tile_a, rule.tile_b);
-
-// 	if (index == table.size()) {
-// 		return;
-// 		std::cout << "Error: Rule not found in table\n";
-// 	}
-
-// 	table[index] = rule;
-// 	num_elements++;
-// }
-
-// template <typename TilePair>
-// size_t Rules<TilePair>::find_index(tile_t tile_a, tile_t tile_b) {
-//     // Primary hash to find the initial index
-//     size_t index = hash_rule({tile_a, tile_b}) % table.size();
-//     size_t probe = 1;  // Quadratic probe factor
-
-//     // Loop until an empty slot or matching entry is found, or all slots are probed
-//     while (table[index].tile_a != EMPTY_TILE) {
-//         // If we find a matching tile pair, return the index
-//         if (table[index].tile_a == tile_a && table[index].tile_b == tile_b) {
-//             return index;
-//         }
-
-//         // Quadratic probing to find the next index
-//         index = (index + probe * probe) % table.size();
-//         probe++;
-
-//         // If we exceed the table size in probes, no slot found
-//         if (probe >= table.size()) {
-//             return table.size();  // Indicate failure
-//         }
-//     }
-
-//     // Return the index for insertion if an empty slot is found
-//     return index;
-// }
-
-
-
-
-
-// template <typename TilePair>
-// TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b) {
-// 	size_t index = find_index(tile_a, tile_b);
-// 	if (index == table.size()) {
-// 		return get_invalid_value<TilePair>();
-// 	}
-
-// 	return table[index];
-// }
-
-// template <typename TilePair>
-// double Rules<TilePair>::load_factor() {
-// 	return (double)num_elements / table.size();
-// }
-
-//////////////////////////////////////////
-// Rules private members
-//////////////////////////////////////////
-// template <typename TilePair>
-// uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
-//     uint64_t hash = 0xcbf29ce484222325;
-//     if constexpr (std::is_same<TilePair, transition_t>::value) {
-//         hash ^= rule.tile_a;
-//         hash *= 0x100000001b3;
-//         hash ^= rule.tile_b;
-//         hash *= 0x100000001b3;
-//     } else if constexpr (std::is_same<TilePair, affinity_t>::value) {
-//         hash ^= rule.tile_a;
-//         hash *= 0x100000001b3;
-//     }
-//     return hash;
-// }
-
-// template <typename TilePair>
-// void Rules<TilePair>::resize(size_t new_size) {
-//     std::vector<TilePair> new_table(new_size);
-//     // Rehash all elements into the new table
-//     for (const auto& rule : table) {
-//         if (rule.tile_a != EMPTY_TILE) {
-//             size_t index = find_index(rule.tile_a, rule.tile_b);
-//             new_table[index] = rule;
-//         }
-//     }
-//     table = std::move(new_table);
-// }
-
-// template <typename TilePair>
-// bool Rules<TilePair>::is_prime(size_t n) {
-//     if (n <= 1) return false;
-//     if (n <= 3) return true;
-//     if (n % 2 == 0 || n % 3 == 0) return false;
-//     for (size_t i = 5; i * i <= n; i += 6) {
-//         if (n % i == 0 || n % (i + 2) == 0) return false;
-//     }
-//     return true;
-// }
-
-// template <typename TilePair>
-// size_t Rules<TilePair>::next_prime(size_t n) {
-// 	// yikes
-//     while (!is_prime(n)) {
-//         n++;
-//     }
-//     return n;
-// }
-
 // Insert a rule into the hash table
 template <typename TilePair>
 void Rules<TilePair>::insert(const TilePair& rule) {
@@ -145,43 +21,32 @@ void Rules<TilePair>::insert(const TilePair& rule) {
 	}
 }
 
-// Find a rule in the hash table
-// template <typename TilePair>
-// TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b) {
-//     TilePair temp_rule = {tile_a, tile_b};
-//     uint64_t key = hash_rule(temp_rule);
-
-//     auto it = table.find(key);
-//     if (it != table.end()) {
-//         return it->second;
-//     } else {
-//         return get_invalid_value<TilePair>();
-//     }
-// }
-
 template <typename TilePair>
 TilePair Rules<TilePair>::find(tile_t tile_a, tile_t tile_b, bool use_tile_a) {
 	uint64_t key;
 	TilePair temp_rule = {tile_a, tile_b};
 
+	// If the TilePair is an affinity, apply the hashing rules for different orientations
     if constexpr (std::is_same<TilePair, affinity_t>::value) {
         temp_rule.hash_tile_a = use_tile_a;
 	}
 	key = hash_rule(temp_rule);
 
 	if constexpr (std::is_same<TilePair, affinity_t>::value) {
-		if (!use_tile_a) {
-			auto it = table_b.find(key);
-			if (it != table_b.end()) {
-				return it->second;
-			}
-		} else {
+		// When searching for an affinity, we only ever have 1 of 2 tiles, so we must hash by either tile A or B
+		if (use_tile_a) {
 			auto it = table.find(key);
 			if (it != table.end()) {
 				return it->second;
 			}
+		} else {
+			auto it = table_b.find(key);
+			if (it != table_b.end()) {
+				return it->second;
+			}
 		}
 	} else {
+		// Find the transition pair
 		auto it = table.find(key);
 		if (it != table.end()) {
 			return it->second;

@@ -53,6 +53,7 @@ void log_deltas(DeltaBuffer& buffer) {
     std::cout << "\n========================\n\nStep deltas: " << buffer.count << "\n";
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
+		if (delta.type == delta_t::Type::TRANSITION) continue;
 		std::cout << "(" << delta.location_a.x << ", " << delta.location_a.y << ", "
 				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
 				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b) << " " << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");

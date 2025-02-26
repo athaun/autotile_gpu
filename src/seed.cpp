@@ -49,7 +49,7 @@ grid_t load(std::string filepath) {
     int original_height = max_y - min_y + 1;
 
     // Define new, larger grid dimensions
-    int expanded_size = 20 * std::max(original_width, original_height); // Expand by 4x
+    int expanded_size = 9 * std::max(original_width, original_height); // Expand by 4x
     int new_width = expanded_size;
     int new_height = expanded_size;
 

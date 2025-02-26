@@ -15,6 +15,9 @@ std::string decode(uint32_t value) {
 	for (size_t i = 0; i < sizeof(uint32_t); i++) {
 		result += (char)(value >> (i * 8)); // Unpack each character
 	}
+	while (result.length() < 4) {
+        result.push_back(' '); // Pad with spaces to ensure 4 characters
+    }
 	return result;
 }
 

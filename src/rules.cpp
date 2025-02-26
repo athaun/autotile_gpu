@@ -2,6 +2,23 @@
 
 namespace Rules {
 
+template <typename TilePair>
+uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
+    uint64_t hash = 0xcbf29ce484222325;
+    if constexpr (std::is_same<TilePair, transition_t>::value) {
+        hash ^= rule.tile_a;
+        hash *= 0x100000001b3;
+        hash ^= rule.tile_b;
+        hash *= 0x100000001b3;
+    } else if constexpr (std::is_same<TilePair, affinity_t>::value) {
+		if (rule.hash_tile_a) hash ^= rule.tile_a;
+		else hash ^= rule.tile_b;
+
+        hash *= 0x100000001b3;
+    }
+    return hash;
+}
+
 // Insert a rule into the hash table
 template <typename TilePair>
 void Rules<TilePair>::insert(const TilePair& rule) {
@@ -14,7 +31,7 @@ void Rules<TilePair>::insert(const TilePair& rule) {
 		temp_rule.hash_tile_a = false;
 		table_b[hash_rule(temp_rule)] = temp_rule;
 
-		num_elements ++;
+		num_elements++;
 	} else {
 		table[hash_rule(rule)] = rule;
 		num_elements++;
@@ -63,24 +80,6 @@ double Rules<TilePair>::load_factor() const {
     return (double)num_elements / table.size();
 }
 
-// Hash function for a rule
-template <typename TilePair>
-uint64_t Rules<TilePair>::hash_rule(const TilePair& rule) {
-    uint64_t hash = 0xcbf29ce484222325;
-    if constexpr (std::is_same<TilePair, transition_t>::value) {
-        hash ^= rule.tile_a;
-        hash *= 0x100000001b3;
-        hash ^= rule.tile_b;
-        hash *= 0x100000001b3;
-    } else if constexpr (std::is_same<TilePair, affinity_t>::value) {
-		if (rule.hash_tile_a) hash ^= rule.tile_a;
-		else hash ^= rule.tile_b;
-
-        hash *= 0x100000001b3;
-    }
-    return hash;
-}
-
 template <typename TilePair>
 TilePair get_invalid_value();
 
@@ -103,7 +102,7 @@ affinity_t get_invalid_value<affinity_t>() {
  */
 template <typename TilePair>
 bool is_invalid(TilePair& rule) {
-    return (rule.tile_a == EMPTY_TILE || rule.tile_b == EMPTY_TILE);
+    return (rule.tile_a == EMPTY_TILE && rule.tile_b == EMPTY_TILE);
 }
 
 /**

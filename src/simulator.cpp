@@ -99,7 +99,7 @@ void apply_deltas(DeltaBuffer& buffer) {
 	print_grid();
 
 	// sleep for a bit
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	std::this_thread::sleep_for(std::chrono::milliseconds(40));
 
 	buffer.count = 0;
 }
@@ -148,60 +148,84 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
         // Determine the correct orientation based on direction
         Rules::affinity_t affinity;
         loc_t delta_location_a, delta_location_b;
-        tile_t delta_tile_a, delta_tile_b;
+
+		/**
+		 * Directional Handling for Affinity Lookup
+		 *
+		 * Ensures that tile A is always north (up) or west (left) of tile B.
+		 *
+		 * | Direction        | Affinity Lookup                         | tile_a        | tile_b        | use_tile_a |
+		 * |------------------|-----------------------------------------|---------------|---------------|------------|
+		 * | Right { 1, 0 }   | find(center_tile, neighbor_tile, true)  | center_tile   | neighbor_tile | true       |
+		 * | Down  { 0, 1 }   | find(center_tile, neighbor_tile, true)  | center_tile   | neighbor_tile | true       |
+		 * | Left  { -1, 0 }  | find(neighbor_tile, center_tile, false) | neighbor_tile | center_tile   | false      |
+		 * | Up    { 0, -1 }  | find(neighbor_tile, center_tile, false) | neighbor_tile | center_tile   | false      |
+		 */
         
-        if (dir == 0) {
-            // Right: center_tile is `tile_a`
-            affinity = affinities.find(center_tile, true);
-            note += "-right";
-            delta_location_a = location;
-            delta_location_b = neighbor_tile_location;
-            delta_tile_a = affinity.tile_a;
-            delta_tile_b = affinity.tile_b;
-        } else if (dir == 1) {
-            // Down: center_tile is `tile_a`
-            affinity = affinities.find(center_tile, true);
-            note += "-down";
-            delta_location_a = location;
-            delta_location_b = neighbor_tile_location;
-            delta_tile_a = affinity.tile_a;
-            delta_tile_b = affinity.tile_b;
-        } else if (dir == 2) {
-            // Left: center_tile is `tile_b`
-            affinity = affinities.find(neighbor_tile, false);
-            note += "-left";
-            delta_location_a = neighbor_tile_location;
-            delta_location_b = location;
-            delta_tile_a = affinity.tile_b;
-            delta_tile_b = affinity.tile_a;
-        } else if (dir == 3) {
-            // Up: center_tile is `tile_b`
-            affinity = affinities.find(neighbor_tile, false);
-            note += "-up";
-            delta_location_a = neighbor_tile_location;
-            delta_location_b = location;
-            delta_tile_a = affinity.tile_b;
-            delta_tile_b = affinity.tile_a;
-        }
+        switch (dir) { 
+			case 0:
+				// { 1, 0 }, Right
+				// center_tile is `tile_a`
+				affinity = affinities.find(center_tile, neighbor_tile, true);
+				delta_location_a = location;
+				delta_location_b = neighbor_tile_location;
+				note += "-right";
+				break;
+			case 1:
+				// { 0, 1 }, Down
+				// center_tile is `tile_a`
+				affinity = affinities.find(center_tile, neighbor_tile, true);
+				delta_location_a = location;
+				delta_location_b = neighbor_tile_location;
+				note += "-down";
+				break;
+			case 2:
+				// { -1, 0 }, Left
+				// neighbor_tile is `tile_a`
+				affinity = affinities.find(neighbor_tile, center_tile, false);
+				delta_location_a = neighbor_tile_location;
+				delta_location_b = location;
+				note += "-left";
+				break;
+			case 3:
+				// { 0, -1 }, Up
+				// neighbor_tile is `tile_a`
+				affinity = affinities.find(neighbor_tile, center_tile, false);
+				delta_location_a = neighbor_tile_location;
+				delta_location_b = location;
+				note += "-up";
+				break;
+			default:
+				continue;
+		}
 
         note += " of center tile: " + Tile::decode(center_tile);
 
         // If the affinity is invalid, skip this iteration
-        if (Rules::is_invalid(affinity)) continue;
+        if (Rules::is_invalid(affinity)) continue; // TODO CHECK IF SHOULD BE && or || in this fn
 
         // Lock the tiles
         Tile::lock(grid.tiles[location.x + location.y * grid.width]);
         Tile::lock(grid.tiles[neighbor_tile_location.x + neighbor_tile_location.y * grid.width]);
 
-        // Construct the delta for attachment
-        delta_t delta = {
-            { center_tile, neighbor_tile }, // before
-            { delta_tile_a, delta_tile_b }, // after
-            delta_location_a,
-            delta_location_b,
-            delta_t::Type::ATTACHMENT,
-            note
-        };
+        tile_t before_tile_a, before_tile_b;
+		if (dir < 2) { // Right and Down: center_tile is A
+			before_tile_a = center_tile;
+			before_tile_b = neighbor_tile;
+		} else { // Left and Up: neighbor_tile is A
+			before_tile_a = neighbor_tile;
+			before_tile_b = center_tile;
+		}
+
+		delta_t delta = {
+			{ before_tile_a, before_tile_b }, // before state, now correctly ordered
+			{ affinity.tile_a, affinity.tile_b }, // after state from the affinity lookup
+			delta_location_a,
+			delta_location_b,
+			delta_t::Type::ATTACHMENT,
+			note
+		};
+
 
         // Add the valid delta to the list of possible deltas
         possible_deltas.push_back(delta);

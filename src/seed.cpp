@@ -46,23 +46,31 @@ grid_t load(std::string filepath) {
 	file.close();
 
 	int original_width = max_x - min_x + 1;
-	int original_height = max_y - min_y + 1;
-	int padding = 2 * std::max(original_width, original_height);
-	int padded_width = original_width + 2 * padding;
-	int padded_height = original_height + 2 * padding;
+    int original_height = max_y - min_y + 1;
 
-	// Allocate the new grid with padding
-	grid.width = padded_width;
-	grid.height = padded_height;
-	grid.tiles = new tile_t[grid.width * grid.height]();
-	// Initialize the grid with a specific tile value (e.g., 0 for empty)
-	std::fill(grid.tiles, grid.tiles + grid.width * grid.height, Rules::EMPTY_TILE);
+    // Define new, larger grid dimensions
+    int expanded_size = 20 * std::max(original_width, original_height); // Expand by 4x
+    int new_width = expanded_size;
+    int new_height = expanded_size;
 
-	// Copy the seed data into the new grid with padding
-	for (const auto& [x, y, tile] : seed_data) {
-		grid.tiles[(y - min_y + padding) * grid.width + (x - min_x + padding)] = Tile::encode(tile);
-		std::cout << "Seed Tile: " << tile << "\t" << Tile::encode(tile) << "\tx: " << x << "\ty: " << y << std::endl;
-	}
+    // Compute centering offsets
+    int offset_x = (new_width - original_width) / 2;
+    int offset_y = (new_height - original_height) / 2;
+
+    // Allocate the new grid
+    grid.width = new_width;
+    grid.height = new_height;
+    grid.tiles = new tile_t[grid.width * grid.height]();
+    std::fill(grid.tiles, grid.tiles + grid.width * grid.height, Rules::EMPTY_TILE);
+
+	// Copy the seed data into the new grid with centering
+    for (const auto& [x, y, tile] : seed_data) {
+        int new_x = (x - min_x) + offset_x;
+        int new_y = (y - min_y) + offset_y;
+        grid.tiles[new_y * grid.width + new_x] = Tile::encode(tile);
+        std::cout << "Seed Tile: " << tile << "\tEncoded: " << Tile::encode(tile) 
+                  << "\tNew Pos: (" << new_x << ", " << new_y << ")" << std::endl;
+    }
 
 	return grid;
 }

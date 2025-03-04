@@ -123,6 +123,9 @@ void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y,
 										  std::to_string(resize_offset_x) + "," + 
 										  std::to_string(resize_offset_y);
     simulator_message_queue.push(grid_message);
+
+    // Temporary fix to allow the frontend to catch up, avoiding artifacts
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
 }
 
 void log_deltas(DeltaBuffer& buffer) {

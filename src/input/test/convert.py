@@ -201,6 +201,6 @@ with open('./sierpinski_triangle.haff', 'w') as f:
         f.write(s1+'+'+s2+','+strength+'\n')
 
 # Write the key mappings to a file
-with open("state_keys.txt", 'w') as key_file:
+with open("./sierpinski_triangle.key", 'w') as key_file:
     for original, encoded in map.items():
         key_file.write(f"{encoded}\t{original}\n")

@@ -65,7 +65,7 @@ grid_t load(std::string filepath) {
 
 	Message grid_message;
 	grid_message.type = Message::MessageType::CUSTOM;
-	grid_message.content = "GRID_SIZE," + std::to_string(grid.width) + "," + std::to_string(grid.height);
+	grid_message.content = "GRID_SIZE," + std::to_string(grid.width) + "," + std::to_string(grid.height) + ",0,0";
 	simulator_message_queue.push(grid_message);
 
 	Message message;

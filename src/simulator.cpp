@@ -39,6 +39,42 @@ void init(std::string system_name) {
 	Rules::load_name_keys(system_name + ".key", Tile::name_keys);
 }
 
+void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y) {
+    int new_width = grid.width * 2;
+    int new_height = grid.height * 2;
+
+    resize_offset_x = (new_width - grid.width) / 2;
+    resize_offset_y = (new_height - grid.height) / 2;
+
+    Seed::grid_t new_grid;
+    new_grid.width = new_width;
+    new_grid.height = new_height;
+    new_grid.tiles = new tile_t[new_grid.width * new_grid.height]();
+    
+    std::fill(new_grid.tiles, new_grid.tiles + new_grid.width * new_grid.height, Rules::EMPTY_TILE);
+
+    // Copy the old grid into the new grid
+    for (int y = 0; y < grid.height; y++) {
+        std::memcpy(
+            &new_grid.tiles[(y + resize_offset_y) * new_grid.width + resize_offset_x], 
+            &grid.tiles[y * grid.width], 
+            grid.width * sizeof(tile_t)
+        );
+    }
+
+    delete[] grid.tiles;
+    grid = std::move(new_grid);
+
+    Message grid_message;
+    grid_message.type = Message::MessageType::CUSTOM;
+    grid_message.content = "GRID_SIZE," + std::to_string(grid.width) + "," + 
+										  std::to_string(grid.height) + "," + 
+										  std::to_string(resize_offset_x) + "," + 
+										  std::to_string(resize_offset_y);
+    simulator_message_queue.push(grid_message);
+}
+
+
 void log_deltas(DeltaBuffer& buffer) {
     if (buffer.count == 0) return;
 
@@ -100,33 +136,42 @@ void send_deltas(DeltaBuffer& buffer) {
 }
 
 void apply_deltas(DeltaBuffer& buffer) {
-    if (buffer.count == 0) {
-        // exit(0);
-		return;
+    if (buffer.count == 0) return;
+
+    if (sim_state == SimState::STEP) {
+        sim_state = SimState::PAUSED;
     }
 
-	if (sim_state == SimState::STEP) {
-		sim_state = SimState::PAUSED;
-	}
+    int resize_offset_x = 0;
+    int resize_offset_y = 0;
 
-    
+    for (size_t i = 0; i < buffer.count; i++) {
+        delta_t& delta = buffer.deltas[i];
 
-	for (size_t i = 0; i < buffer.count; i++) {
-		const delta_t& delta = buffer.deltas[i];
+        if (delta.location_a.x >= grid.width - 2 || 
+            delta.location_a.y >= grid.height - 2 ||
+            delta.location_a.x < 2 || 
+            delta.location_a.y < 2)  {
+            
+            resize_grid(grid, resize_offset_x, resize_offset_y);
+			buffer.count = 0;
+            return;
+        }
+    }
 
-		tile_t& tile_a = grid.tiles[delta.location_a.x + delta.location_a.y * grid.width];
-		tile_t& tile_b = grid.tiles[delta.location_b.x + delta.location_b.y * grid.width];
+    for (size_t i = 0; i < buffer.count; i++) {
+        delta_t& delta = buffer.deltas[i];
 
-		// This assignment will unlock the tile by overwriting the lock bit
-		tile_a = delta.after.tile_a;
-		tile_b = delta.after.tile_b;
-	}
+        tile_t& tile_a = grid.tiles[delta.location_a.x + delta.location_a.y * grid.width];
+        tile_t& tile_b = grid.tiles[delta.location_b.x + delta.location_b.y * grid.width];
 
-	// sleep for a bit
-	// std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        tile_a = delta.after.tile_a;
+        tile_b = delta.after.tile_b;
+    }
 
-	buffer.count = 0;
+    buffer.count = 0;
 }
+
 
 
 loc_t neighborhood[4] = {

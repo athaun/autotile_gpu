@@ -16,13 +16,13 @@ public:
         delete[] tiles;
     }
 
-    void resize(int new_width, int new_height) {
+    void resize(int new_width, int new_height, int offset_x = 0, int offset_y = 0) {
         tile_t* new_tiles = new tile_t[new_width * new_height]();
         std::fill(new_tiles, new_tiles + new_width * new_height, Rules::EMPTY_TILE);
 
         for (int y = 0; y < std::min(height, new_height); ++y) {
             for (int x = 0; x < std::min(width, new_width); ++x) {
-                new_tiles[x + y * new_width] = tiles[x + y * width];
+                new_tiles[(x + offset_x) + (y + offset_y) * new_width] = tiles[x + y * width];
             }
         }
         delete[] tiles;
@@ -51,8 +51,13 @@ Grid grid = Grid();
 void draw_grid(sf::RenderWindow& window) {
     static std::unordered_map<tile_t, sf::Color> colorMap;
 
-    int offsetX = (window.getSize().x - grid.width * TILE_SIZE) / 2;
-    int offsetY = (window.getSize().y - grid.height * TILE_SIZE) / 2;
+    // Scale down tile size if needed to keep it in view
+    while (grid.width * TILE_SIZE > window.getSize().x || grid.height * TILE_SIZE > window.getSize().y) {
+        TILE_SIZE--;
+    }
+
+    int offsetX = std::max((uint)0, (window.getSize().x - grid.width * TILE_SIZE) / 2);
+    int offsetY = std::max((uint)0, (window.getSize().y - grid.height * TILE_SIZE) / 2);
 
     for (int y = grid.height - 1; y >= 0; --y) {
         for (int x = 0; x < grid.width; ++x) {
@@ -97,11 +102,13 @@ void handle_custom_message(std::optional<Message> message) {
         tokens.push_back(token);
     }
  
-    if (tokens[0] == "GRID_SIZE" || tokens[0] == "GRID_RESIZE") {
+    if (tokens[0] == "GRID_SIZE") {
         int new_width = std::stoi(tokens[1]);
         int new_height = std::stoi(tokens[2]);
+        int resize_offset_x = std::stoi(tokens[3]);
+        int resize_offset_y = std::stoi(tokens[4]);
 
-        grid.resize(new_width, new_height);
+        grid.resize(new_width, new_height, resize_offset_x, resize_offset_y);
 
         std::cout << "[FRONTEND] Set grid size to " << new_width << "x" << new_height << std::endl;
     } else {

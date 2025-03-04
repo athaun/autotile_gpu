@@ -244,7 +244,7 @@ void load_name_keys(std::string filepath, std::unordered_map<tile_t, std::string
 
 	if (!file.is_open()) {
 		std::cerr << "Error: Could not open the file " << filepath << std::endl;
-		throw std::invalid_argument("Could not open the file");
+		return;
 	}
 
 	std::string line;

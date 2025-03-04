@@ -11,8 +11,8 @@ def generate_random_state():
 
 map = {}
 
-INPUT_FILE = "line/line.xml"
-OUTPUT_FILE = "line/line"
+INPUT_FILE = "fractal2/fractal.xml"
+OUTPUT_FILE = "fractal2/fractal"
 
 with open(INPUT_FILE, 'r') as f:
     data = f.read()

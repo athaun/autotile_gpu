@@ -98,7 +98,11 @@ def main(input_file, output_file):
             f.write(f"{encoded}\t{original}\n")
 
 if __name__ == "__main__":
-    system = "test/test"
+    
+    system = "fractal2/fractal"
+    print("HELLO")
     INPUT_FILE = f"{system}.xml"
+    print("HELLO")
     OUTPUT_FILE = f"{system}"
+    print(f"HELLO printing {system} {INPUT_FILE} {OUTPUT_FILE}")
     main(INPUT_FILE, OUTPUT_FILE)

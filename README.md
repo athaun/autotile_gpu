@@ -1,5 +1,8 @@
 # AutoTile GPGPU  
 
+![image](https://github.com/user-attachments/assets/41be3653-97e4-441e-972a-b7dc703cc80f)
+
+
 A tile automata simulator that takes advantage of GPU compute for large-scale simulations.  
 
 ## Requirements  

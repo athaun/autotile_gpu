@@ -39,12 +39,19 @@ void init(std::string system_name) {
 	Rules::load_name_keys(system_name + ".key", Tile::name_keys);
 }
 
-void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y) {
-    int new_width = grid.width * 2;
-    int new_height = grid.height * 2;
+void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y, loc_t attachment_location) {
+    int new_width = grid.width;
+    int new_height = grid.height;
 
-    resize_offset_x = (new_width - grid.width) / 2;
-    resize_offset_y = (new_height - grid.height) / 2;
+    if (attachment_location.x < 2 || attachment_location.x >= grid.width - 2) {
+        new_width *= 2;
+        resize_offset_x = (new_width - grid.width) / 2;
+    }
+
+    if (attachment_location.y < 2 || attachment_location.y >= grid.height - 2) {
+        new_height *= 2;
+        resize_offset_y = (new_height - grid.height) / 2;
+    }
 
     Seed::grid_t new_grid;
     new_grid.width = new_width;
@@ -153,7 +160,7 @@ void apply_deltas(DeltaBuffer& buffer) {
             delta.location_a.x < 2 || 
             delta.location_a.y < 2)  {
             
-            resize_grid(grid, resize_offset_x, resize_offset_y);
+            resize_grid(grid, resize_offset_x, resize_offset_y, delta.location_a);
         }
     }
 
@@ -387,12 +394,9 @@ void run_serial() {
 	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
 
-	std::cout << "Initial grid state:" << std::endl;
-
 	int ticks = 0;
 	while (true) {
 		process_control_messages();
-
 
 		if (sim_state == SimState::PAUSED) {
 			continue;
@@ -416,32 +420,49 @@ void run_serial() {
 }
 
 void run_parallel() {
-/*	kp::Manager mgr;
+    // 1. Create Kompute Manager with default settings (device 0, first queue and no extensions)
+    kp::Manager mgr;
 
-	std::shared_ptr<kp::TensorT<float> > tensorInA = mgr.tensor({ 2.0, 4.0, 6.0 });
-	std::shared_ptr<kp::TensorT<float> > tensorInB = mgr.tensor({ 0.0, 1.0, 2.0 });
-	std::shared_ptr<kp::TensorT<float> > tensorOut = mgr.tensor({ 0.0, 0.0, 0.0 });
+    // 2. Create and initialize Kompute Tensors through manager
+    auto tensorInA = mgr.tensor({ 2.0, 4.0, 6.0 });
+    auto tensorInB = mgr.tensor({ 0.0, 1.0, 2.0 });
+    auto tensorOut = mgr.tensorT<uint32_t>({ 0, 0, 0 });
 
-	const std::vector<std::shared_ptr<kp::Tensor> > params = { tensorInA, tensorInB, tensorOut };
+    std::vector<std::shared_ptr<kp::Memory>> params = { tensorInA, tensorInB, tensorOut };
 
-	const std::vector<uint32_t> shader = std::vector<uint32_t>(shader::MY_SHADER_COMP_SPV.begin(), shader::MY_SHADER_COMP_SPV.end());
-	std::shared_ptr<kp::Algorithm> algo = mgr.algorithm(params, shader);
+    // 3. Create algorithm based on shader (supports buffers & push/spec constants)
+    kp::Workgroup workgroup({3, 1, 1});
+    std::vector<float> specConsts({ 2 });
+    std::vector<float> pushConsts({ 2.0 });
 
-	mgr.sequence()
-		->record<kp::OpTensorSyncDevice>(params)
-		->record<kp::OpAlgoDispatch>(algo)
-		->record<kp::OpTensorSyncLocal>(params)
-		->eval();
+    const std::vector<uint32_t> shader = std::vector<uint32_t>(shader::MY_SHADER_COMP_SPV.begin(), shader::MY_SHADER_COMP_SPV.end());
+    auto algorithm = mgr.algorithm(params, shader, workgroup, specConsts, pushConsts);
 
-	// prints "Output {  0  4  12  }"
-	std::cout << "Output: {  ";
-	for (const float& elem : tensorOut->vector()) {
-		std::cout << elem << "  ";
-	}
-	std::cout << "}" << std::endl;
+    // 4. Run operation synchronously using sequence
+    mgr.sequence()
+        ->record<kp::OpSyncDevice>(params)
+        ->record<kp::OpAlgoDispatch>(algorithm)
+        ->record<kp::OpSyncLocal>(params)
+        ->eval();
 
-	if (tensorOut->vector() != std::vector<float>{ 0, 4, 12 }) {
-		throw std::runtime_error("Result does not match");
-	}*/
+    // 5. Sync results from the GPU asynchronously
+    auto sq = mgr.sequence();
+    sq->evalAsync<kp::OpSyncLocal>(params);
+
+    // ... Do other work asynchronously whilst GPU finishes
+
+    sq->evalAwait();
+
+    // 6. Print the output
+    std::cout << "Output: {  ";
+    for (const uint32_t& elem : tensorOut->vector()) {
+        std::cout << elem << "  ";
+    }
+    std::cout << "}" << std::endl;
+
+    // Verify the result
+    if (tensorOut->vector() != std::vector<uint32_t>{ 0, 4, 12 }) {
+        throw std::runtime_error("Result does not match");
+    }
 }
 } // namespace Simulator

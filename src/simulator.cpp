@@ -2,6 +2,7 @@
 #include "shader/my_shader.hpp"
 #include "simulator.h"
 #include <thread>
+#include <unordered_set>
 
 namespace Simulator {
 
@@ -15,12 +16,52 @@ Rules::Rules<Rules::affinity_t> vertical_affinities;
 
 Seed::grid_t grid;
 
+std::unordered_set<loc_t> available_locations;
+
+void remove_location(loc_t location) {
+    available_locations.erase(location);
+}
+
+void add_location(loc_t location) {
+    available_locations.insert(location);
+}
+
+void initialize_available_locations() {
+    for (int x = 0; x < grid.width; x++) {
+        for (int y = 0; y < grid.height; y++) {
+            if (grid.tiles[x + y * grid.width] == Rules::EMPTY_TILE) {
+                continue;
+            }
+            add_location({x, y});
+        }
+    }
+}
+
+loc_t choose_random_location() {
+    if (available_locations.empty()) {
+        return {-1, -1}; // No available locations
+    }
+
+    auto it = available_locations.begin();
+    std::advance(it, rand() % available_locations.size());
+    return *it;
+}
+
+void offset_locations(int offset_x, int offset_y) {
+    for (const loc_t& location : available_locations) {
+        loc_t& mutable_location = const_cast<loc_t&>(location);
+        mutable_location.x += offset_x;
+        mutable_location.y += offset_y;
+    }
+}
+
+
 void DeltaBuffer::push(delta_t delta) {
-	if (count < MAX_DELTAS) {
-		deltas[count++] = delta;
-	} else {
-		count = 0;
-	}
+    if (count < MAX_DELTAS) {
+        deltas[count++] = delta;
+    } else {
+        count = 0;
+    }
 }
 
 DeltaBuffer delta_buffer;
@@ -29,6 +70,8 @@ void init(std::string system_name) {
     system_name = "input/" + system_name;
 
 	grid = Seed::load(system_name + ".seed");
+
+    initialize_available_locations();
 
 	Rules::load(system_name + ".htrans", horizontal_transitions);
     Rules::load(system_name + ".vtrans", vertical_transitions);
@@ -72,6 +115,8 @@ void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y,
     delete[] grid.tiles;
     grid = std::move(new_grid);
 
+    offset_locations(resize_offset_x, resize_offset_y);
+
     Message grid_message;
     grid_message.type = Message::MessageType::CUSTOM;
     grid_message.content = "GRID_SIZE," + std::to_string(grid.width) + "," + 
@@ -80,7 +125,6 @@ void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y,
 										  std::to_string(resize_offset_y);
     simulator_message_queue.push(grid_message);
 }
-
 
 void log_deltas(DeltaBuffer& buffer) {
     if (buffer.count == 0) return;
@@ -179,21 +223,24 @@ void apply_deltas(DeltaBuffer& buffer) {
 
         tile_a = delta.after.tile_a;
         tile_b = delta.after.tile_b;
+
+        if (delta.type == delta_t::Type::ATTACHMENT) {
+            add_location(delta.location_a);
+            add_location(delta.location_b);
+        }
     }
 
     buffer.count = 0;
 }
 
-
-
-loc_t neighborhood[4] = {
-    { 1, 0 },  // Right
-    { 0, -1 }, // Up   (Adjusted for bottom-left origin)
-    { -1, 0 }, // Left
-    { 0, 1 }   // Down (Adjusted for bottom-left origin)
-};
-
 void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+    static loc_t neighborhood[4] = {
+        { 1, 0 },  // Right
+        { 0, -1 }, // Up  
+        { -1, 0 }, // Left
+        { 0, 1 }   // Down 
+    };
+
     for (int dir = 0; dir < 4; dir++) {
         // Select the appropriate set of affinities based on direction
         Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
@@ -314,6 +361,14 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
 }
 
 void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_t>& possible_deltas) {
+    static loc_t neighborhood[4] = {
+        { 1, 0 },  // Right
+        { 0, -1 }, // Up  
+        { -1, 0 }, // Left
+        { 0, 1 }   // Down 
+    };
+
+
 	if (Tile::is_locked(tile_a)) return;
 
     for (int dir = 0; dir < 2; dir++) {
@@ -389,7 +444,6 @@ void process_control_messages() {
     }
 }
 
-
 void run_serial() {
 	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
@@ -403,7 +457,8 @@ void run_serial() {
 		}
 		
 	    // Randomly select an X and Y coordinate in the grid
-		loc_t location = { rand() % grid.width, rand() % grid.height };
+		// loc_t location = { rand() % grid.width, rand() % grid.height };
+        loc_t location = choose_random_location();
 		tile_t tile_a = grid.tiles[location.x + location.y * grid.width];
 
 		check_transitions(tile_a, location, possible_deltas);

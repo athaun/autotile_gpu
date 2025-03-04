@@ -7,8 +7,13 @@ namespace Simulator {
     struct loc_t {
         int x;
         int y;
+        
         tile_t& get(Seed::grid_t grid) const {
-        return grid.tiles[x + y * grid.width];
+            return grid.tiles[x + y * grid.width];
+        }
+        
+        bool operator==(const loc_t& other) const {
+            return x == other.x && y == other.y;
         }
     };
 
@@ -47,4 +52,13 @@ namespace Simulator {
     void log_deltas(DeltaBuffer& buffer);
     void run_serial();
     void run_parallel();
+}
+
+namespace std {
+    template <>
+    struct hash<Simulator::loc_t> {
+        std::size_t operator()(const Simulator::loc_t& loc) const {
+            return std::hash<int>()(loc.x) ^ (std::hash<int>()(loc.y) << 1);
+        }
+    };
 }

@@ -18,3 +18,4 @@
 #include "simulator.h"
 #include "frontend.h"
 #include "thread_communication.h"
+#include "timer.h"

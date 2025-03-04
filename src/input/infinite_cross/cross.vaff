@@ -1,7 +1,9 @@
-6 AffiSiNieN
+8 Affinities
 SEED+S1__,1
 S1__+S2__,1
 S2__+S3__,1
+S3__+S4__,1
 N1__+SEED,1
 N2__+N1__,1
 N3__+N2__,1
+N4__+N3__,1

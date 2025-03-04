@@ -5,8 +5,9 @@ int main() {
     // Simulator::init("cross/cross");
     // Simulator::init("fractal/sierpinski_triangle");
     // Simulator::init("bin/bincount");
-    Simulator::init("infinite_cross/cross");
+    // Simulator::init("test/test");
     // Simulator::init("longline/test");
+    Simulator::init("infinite_cross/cross");
 
     // Create threads for the frontend and simulator
     std::thread frontend_thread(Frontend::run);

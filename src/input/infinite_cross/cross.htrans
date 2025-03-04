@@ -1,3 +1,5 @@
-2 Transitions
+4 Transitions
 E2__+E3__->E2__+E1__
 W3__+W2__->W3_!+W2__
+E3__+E4__->E3__+E4_!
+W4__+W3__->W4_!+W3__

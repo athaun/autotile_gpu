@@ -1,3 +1,5 @@
-2 Transitions
+4 Transitions
 N3__+N2__->N3_!+N2__
 S2__+S3__->S2__+S3_!
+N4__+N3__->N4_!+N3__
+S3__+S4__->S3__+S4_!

@@ -239,4 +239,24 @@ template void load<affinity_t>(std::string filepath, Rules<affinity_t>& rules);
 template bool is_invalid(transition_t& rule);
 template bool is_invalid(affinity_t& rule);
 
+void load_name_keys(std::string filepath, std::unordered_map<tile_t, std::string>& name_keys) {
+	std::ifstream file(filepath);
+
+	if (!file.is_open()) {
+		std::cerr << "Error: Could not open the file " << filepath << std::endl;
+		throw std::invalid_argument("Could not open the file");
+	}
+
+	std::string line;
+	while (std::getline(file, line)) {
+		size_t tab_pos = line.find('\t');
+		std::string key = line.substr(0, tab_pos);
+		std::string value = line.substr(tab_pos + 1);
+
+		name_keys[Tile::encode(key)] = value;
+	}
+
+	file.close();
+}
+
 } // namespace Rules

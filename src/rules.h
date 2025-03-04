@@ -47,6 +47,8 @@ private:
 template <typename TilePair>
 void load(std::string filepath, Rules<TilePair>& rules);
 
+void load_name_keys(std::string filepath, std::unordered_map<tile_t, std::string>& name_keys);
+
 template <typename TilePair>
 bool is_invalid(TilePair& rule);
 

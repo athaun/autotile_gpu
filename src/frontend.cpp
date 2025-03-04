@@ -3,7 +3,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
 
-int TILE_SIZE = 32;
+namespace Frontend {
+int TILE_SIZE = 100;
 
 class Grid {
 public:
@@ -113,7 +114,7 @@ void handle_custom_message(std::optional<Message> message) {
     }
 }
 
-void run_frontend() {
+void run() {
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Tile Automata Simulator", sf::Style::Resize);
     window.setFramerateLimit(60);
     
@@ -156,6 +157,23 @@ void run_frontend() {
             frontend_message_queue.push(Message{Message::MessageType::RUN});
         }
 
+        // P - print grid
+        if (keyPressed.code == sf::Keyboard::Key::P) {
+            for (int y = grid.height - 1; y >= 0; --y) {
+                for (int x = 0; x < grid.width; ++x) {
+                    std::cout << Tile::decode(grid.get_tile(x, y)) << " ";
+                }
+                std::cout << std::endl;
+            }
+            std::cout << std::endl;
+            for (int y = grid.height - 1; y >= 0; --y) {
+                for (int x = 0; x < grid.width; ++x) {
+                    std::cout << std::setw(13) << Tile::name(grid.get_tile(x, y)) << " ";
+                }
+                std::cout << std::endl;
+            }
+        }
+
         
     };
 
@@ -168,7 +186,6 @@ void run_frontend() {
             switch (msg->type) {
                 case Message::MessageType::TILE_UPDATE:
                     handle_tile_update(msg);
-                    std::cout << "[FRONTEND] Updated tile at (" << msg->location.x << ", " << msg->location.y << ") to " << Tile::decode(msg->value) << std::endl;
                     break;
                 case Message::MessageType::EXIT:
                     window.close();
@@ -186,3 +203,4 @@ void run_frontend() {
     }
 
 }
+} // namespace Frontend

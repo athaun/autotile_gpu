@@ -19,7 +19,6 @@ void DeltaBuffer::push(delta_t delta) {
 	if (count < MAX_DELTAS) {
 		deltas[count++] = delta;
 	} else {
-		// log_deltas(*this);
 		count = 0;
 	}
 }
@@ -36,39 +35,49 @@ void init(std::string system_name) {
 
     Rules::load(system_name + ".haff", horizontal_affinities);
     Rules::load(system_name + ".vaff", vertical_affinities);
-}
 
-void print_grid() {
-    std::cout << "\n";
-    for (int y = 0; y < grid.height; y++) {
-        for (int x = 0; x < grid.width; x++) {
-			if (grid.tiles[x + y * grid.width] == Rules::EMPTY_TILE) {
-				std::cout << "[__] ";
-				continue;
-			}
-            std::cout << Tile::decode(grid.tiles[x + y * grid.width]) << " ";
-        }
-        std::cout << "\n";
-    }
+	Rules::load_name_keys(system_name + ".key", Tile::name_keys);
 }
 
 void log_deltas(DeltaBuffer& buffer) {
     if (buffer.count == 0) return;
 
-    std::cout << "\n========================\n\nStep deltas: " << buffer.count << "\n";
+	std::ofstream delta_file("deltas.txt", std::ios::app);  // Open in append mode
+	if (!delta_file.is_open()) {
+        std::cerr << "Error: Could not open file for writing deltas." << std::endl;
+        return;
+    }
+
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
-		if (delta.type == delta_t::Type::TRANSITION) continue;
-		std::cout << "(" << delta.location_a.x << ", " << delta.location_a.y << ", "
-				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
-				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b) << " " << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
+		std::cout << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
 		if (delta.note.length() != 0) {
 			std::cout << delta.note;
 		}
-		std::cout << "\n";
+		std::cout << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
+				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
+				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b);
+		
+		std::cout << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
+				  << Tile::name(delta.before.tile_a) << " + " << Tile::name(delta.before.tile_b)
+				  << " -> " << Tile::name(delta.after.tile_a) << " + " << Tile::name(delta.after.tile_b) << "\n\n";
+
+
+		delta_file << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
+		if (delta.note.length() != 0) {
+			delta_file << delta.note;
+		}
+		delta_file << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
+				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
+				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b);
+		
+		delta_file << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
+				  << Tile::name(delta.before.tile_a) << " + " << Tile::name(delta.before.tile_b)
+				  << " -> " << Tile::name(delta.after.tile_a) << " + " << Tile::name(delta.after.tile_b) << "\n\n";
+		
 	}
 
-	print_grid();
+	delta_file.close();
 }
 
 void send_deltas(DeltaBuffer& buffer) {
@@ -100,11 +109,7 @@ void apply_deltas(DeltaBuffer& buffer) {
 		sim_state = SimState::PAUSED;
 	}
 
-    std::ofstream delta_file("deltas.txt", std::ios::app);  // Open in append mode
-	if (!delta_file.is_open()) {
-        std::cerr << "Error: Could not open file for writing deltas." << std::endl;
-        return;
-    }
+    
 
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
@@ -115,17 +120,7 @@ void apply_deltas(DeltaBuffer& buffer) {
 		// This assignment will unlock the tile by overwriting the lock bit
 		tile_a = delta.after.tile_a;
 		tile_b = delta.after.tile_b;
-
-		delta_file << "(" << delta.location_a.x << ", " << delta.location_a.y << ") "
-				  << Tile::decode(delta.before.tile_a) << "+" << Tile::decode(delta.before.tile_b)
-				  << "->" << Tile::decode(delta.after.tile_a) << "+" << Tile::decode(delta.after.tile_b) << " " << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment)" : "(Transition)") << "\n";
 	}
-
-	delta_file.close();
-
-	// Print the grid
-	// std::cout << "\nApplied deltas:";
-	// print_grid();
 
 	// sleep for a bit
 	// std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -133,11 +128,12 @@ void apply_deltas(DeltaBuffer& buffer) {
 	buffer.count = 0;
 }
 
+
 loc_t neighborhood[4] = {
-    { 1, 0 }, // Right
-    { 0, 1 }, // Down
+    { 1, 0 },  // Right
+    { 0, -1 }, // Up   (Adjusted for bottom-left origin)
     { -1, 0 }, // Left
-    { 0, -1 }, // Up
+    { 0, 1 }   // Down (Adjusted for bottom-left origin)
 };
 
 void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<delta_t>& possible_deltas) {
@@ -145,7 +141,7 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
         // Select the appropriate set of affinities based on direction
         Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
 
-		std::string note = (dir % 2 == 0) ? "haff" : "vaff";
+        std::string note = (dir % 2 == 0) ? "haff" : "vaff";
 
         loc_t neighbor_tile_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
@@ -158,75 +154,75 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
         // Get the tile at the neighbor location
         tile_t neighbor_tile = neighbor_tile_location.get(grid);
 
-		// Ensure that both tiles are not empty, there is nothing to attach to
-		if (center_tile == Rules::EMPTY_TILE && neighbor_tile == Rules::EMPTY_TILE) {
-			continue;
-		}
+        // Ensure that both tiles are not empty, there is nothing to attach to
+        if (center_tile == Rules::EMPTY_TILE && neighbor_tile == Rules::EMPTY_TILE) {
+            continue;
+        }
 
-		// Ensure both tiles are not already filled, there is no space to attach
-		if (center_tile != Rules::EMPTY_TILE && neighbor_tile != Rules::EMPTY_TILE) {
-			continue;
-		}
+        // Ensure both tiles are not already filled, there is no space to attach
+        if (center_tile != Rules::EMPTY_TILE && neighbor_tile != Rules::EMPTY_TILE) {
+            continue;
+        }
 
-		// Ensure neither tile is locked
-		if ((Tile::is_locked(center_tile) && center_tile != Rules::EMPTY_TILE) || 
-			(Tile::is_locked(neighbor_tile) && neighbor_tile != Rules::EMPTY_TILE)) {
-			continue;
-		}
+        // Ensure neither tile is locked
+        if ((Tile::is_locked(center_tile) && center_tile != Rules::EMPTY_TILE) || 
+            (Tile::is_locked(neighbor_tile) && neighbor_tile != Rules::EMPTY_TILE)) {
+            continue;
+        }
 
         // Determine the correct orientation based on direction
         Rules::affinity_t affinity;
         loc_t delta_location_a, delta_location_b;
 
-		/**
-		 * Directional Handling for Affinity Lookup
-		 *
-		 * Ensures that tile A is always north (up) or west (left) of tile B.
-		 *
-		 * | Direction        | Affinity Lookup                         | tile_a        | tile_b        | use_tile_a |
-		 * |------------------|-----------------------------------------|---------------|---------------|------------|
-		 * | Right { 1, 0 }   | find(center_tile, neighbor_tile, true)  | center_tile   | neighbor_tile | true       |
-		 * | Down  { 0, 1 }   | find(center_tile, neighbor_tile, true)  | center_tile   | neighbor_tile | true       |
-		 * | Left  { -1, 0 }  | find(neighbor_tile, center_tile, false) | neighbor_tile | center_tile   | false      |
-		 * | Up    { 0, -1 }  | find(neighbor_tile, center_tile, false) | neighbor_tile | center_tile   | false      |
-		 */
-        
+        /**
+         * Directional Handling for Affinity Lookup (Bottom-Left Origin)
+         *
+         * Ensures that tile A is always west (left) or north (above) of tile B.
+         *
+         * | Direction       | Affinity Lookup                         | tile_a        | tile_b        | use_tile_a |
+         * |-----------------|-----------------------------------------|---------------|---------------|------------|
+         * | Right { 1, 0 }  | find(center_tile, neighbor_tile, true)  | center_tile   | neighbor_tile | true       |
+         * | Up    { 0, -1 } | find(center_tile, neighbor_tile, true)  | center_tile   | neighbor_tile | true       |
+         * | Left  { -1, 0 } | find(neighbor_tile, center_tile, false) | neighbor_tile | center_tile   | false      |
+         * | Down  { 0, 1 }  | find(neighbor_tile, center_tile, false) | neighbor_tile | center_tile   | false      |
+         */
+
         switch (dir) { 
-			case 0:
-				// { 1, 0 }, Right
-				// center_tile is `tile_a`
-				affinity = affinities.find(center_tile, neighbor_tile, true);
-				delta_location_a = location;
-				delta_location_b = neighbor_tile_location;
-				note += "-right";
-				break;
-			case 1:
-				// { 0, 1 }, Down
-				// center_tile is `tile_a`
-				affinity = affinities.find(center_tile, neighbor_tile, true);
-				delta_location_a = location;
-				delta_location_b = neighbor_tile_location;
-				note += "-down";
-				break;
-			case 2:
-				// { -1, 0 }, Left
-				// neighbor_tile is `tile_a`
-				affinity = affinities.find(neighbor_tile, center_tile, false);
-				delta_location_a = neighbor_tile_location;
-				delta_location_b = location;
-				note += "-left";
-				break;
-			case 3:
-				// { 0, -1 }, Up
-				// neighbor_tile is `tile_a`
-				affinity = affinities.find(neighbor_tile, center_tile, false);
-				delta_location_a = neighbor_tile_location;
-				delta_location_b = location;
-				note += "-up";
-				break;
-			default:
-				continue;
-		}
+            case 0:
+                // { 1, 0 }, Right
+                // center_tile is `tile_a`
+                affinity = affinities.find(center_tile, neighbor_tile, true);
+                delta_location_a = location;
+                delta_location_b = neighbor_tile_location;
+                note += "-right";
+                break;
+            case 1:
+                // { 0, -1 }, Up (Adjusted for bottom-left origin)
+                // center_tile is `tile_a`
+                affinity = affinities.find(center_tile, neighbor_tile, true);
+                delta_location_a = location;
+                delta_location_b = neighbor_tile_location;
+                note += "-up";
+                break;
+            case 2:
+                // { -1, 0 }, Left
+                // neighbor_tile is `tile_a`
+                affinity = affinities.find(neighbor_tile, center_tile, false);
+                delta_location_a = neighbor_tile_location;
+                delta_location_b = location;
+                note += "-left";
+                break;
+            case 3:
+                // { 0, 1 }, Down (Adjusted for bottom-left origin)
+                // neighbor_tile is `tile_a`
+                affinity = affinities.find(neighbor_tile, center_tile, false);
+                delta_location_a = neighbor_tile_location;
+                delta_location_b = location;
+                note += "-down";
+                break;
+            default:
+                continue;
+        }
 
         note += " of center tile: " + Tile::decode(center_tile);
 
@@ -238,23 +234,22 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
         Tile::lock(grid.tiles[neighbor_tile_location.x + neighbor_tile_location.y * grid.width]);
 
         tile_t before_tile_a, before_tile_b;
-		if (dir < 2) { // Right and Down: center_tile is A
-			before_tile_a = center_tile;
-			before_tile_b = neighbor_tile;
-		} else { // Left and Up: neighbor_tile is A
-			before_tile_a = neighbor_tile;
-			before_tile_b = center_tile;
-		}
+        if (dir < 2) { // Right and Up: center_tile is A
+            before_tile_a = center_tile;
+            before_tile_b = neighbor_tile;
+        } else { // Left and Down: neighbor_tile is A
+            before_tile_a = neighbor_tile;
+            before_tile_b = center_tile;
+        }
 
-		delta_t delta = {
-			{ before_tile_a, before_tile_b }, // before state, now correctly ordered
-			{ affinity.tile_a, affinity.tile_b }, // after state from the affinity lookup
-			delta_location_a,
-			delta_location_b,
-			delta_t::Type::ATTACHMENT,
-			note
-		};
-
+        delta_t delta = {
+            { before_tile_a, before_tile_b }, // before state, now correctly ordered
+            { affinity.tile_a, affinity.tile_b }, // after state from the affinity lookup
+            delta_location_a,
+            delta_location_b,
+            delta_t::Type::ATTACHMENT,
+            note
+        };
 
         // Add the valid delta to the list of possible deltas
         possible_deltas.push_back(delta);
@@ -343,7 +338,6 @@ void run_serial() {
     srand(time(NULL));
 
 	std::cout << "Initial grid state:" << std::endl;
-	print_grid();
 
 	int ticks = 0;
 	while (true) {
@@ -364,7 +358,7 @@ void run_serial() {
 		choose_delta(possible_deltas);
 
 		if (++ticks % 100 == 0) {
-			// log_deltas(delta_buffer);
+			log_deltas(delta_buffer);
 			send_deltas(delta_buffer);
 			apply_deltas(delta_buffer);
 		}

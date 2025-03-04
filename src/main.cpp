@@ -7,7 +7,7 @@ int main() {
     // Simulator::init("fractal/sierpinski_triangle");
     
     // Create threads for the frontend and simulator
-    std::thread frontend_thread(run_frontend);
+    std::thread frontend_thread(Frontend::run);
     std::thread simulator_thread(Simulator::run_serial);
 
     // Wait for both threads to finish

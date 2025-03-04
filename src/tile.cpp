@@ -1,12 +1,21 @@
 #include "common.h"
 
 namespace Tile {
+std::unordered_map<tile_t, std::string> name_keys = {};
+
 uint32_t encode(const std::string& str) {
 	uint32_t result = 0;
 	for (size_t i = 0; i < str.length() && i < sizeof(uint32_t); i++) {
 		result |= (uint8_t)str[i] << (i * 8); // Pack each character
 	}
 	return result;
+}
+
+std::string name(tile_t tile) {
+    if (name_keys.find(tile) != name_keys.end()) {
+        return name_keys[tile];
+    }
+    return "[______]";
 }
 
 std::string decode(uint32_t value) {

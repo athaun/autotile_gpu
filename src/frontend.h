@@ -1,3 +1,5 @@
 #pragma once
 
-void run_frontend();
+namespace Frontend {
+    void run();
+}

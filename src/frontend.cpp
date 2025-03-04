@@ -468,8 +468,8 @@ public:
         current_pan_y(0.0f),
         target_pan_x(0.0f),
         target_pan_y(0.0f),
-        zoom_lerp_speed(0.1f),
-        pan_lerp_speed(0.1f),
+        zoom_lerp_speed(0.5f),
+        pan_lerp_speed(0.35f),
         last_mouse_x(0), 
         last_mouse_y(0),
         is_dragging(false)
@@ -493,11 +493,9 @@ public:
         height = new_height;
         tiles = new_tiles;
 
-        // Snap the grid position
+        // Snap the grid position to keep the same grid cell in view
         target_pan_x = current_pan_x - offset_x * TILE_SIZE * current_zoom_level;
         target_pan_y = current_pan_y - offset_y * TILE_SIZE * current_zoom_level;
-
-        // Set current pan
         current_pan_x = target_pan_x;
         current_pan_y = target_pan_y;
     }
@@ -510,40 +508,63 @@ public:
         return tiles[x + y * width];
     }
 
-    // Smooth zoom method
-    void zoom(float delta) {
+    void zoom(float delta, sf::RenderWindow& window) {
         // Store the previous zoom level
         float old_zoom = target_zoom_level;
         
         // Update target zoom level with constraints
         target_zoom_level = std::max(0.1f, std::min(10.0f, target_zoom_level * delta));
         
-        // Calculate the mouse position in grid coordinates before zoom
-        sf::Vector2i mouse_pos = sf::Mouse::getPosition();
+        // Get the current mouse position
+        sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
         
-        // Calculate the mouse position relative to the grid
-        float grid_mouse_x = (mouse_pos.x - current_pan_x) / (TILE_SIZE * old_zoom);
-        float grid_mouse_y = (mouse_pos.y - current_pan_y) / (TILE_SIZE * old_zoom);
+        // Calculate the mouse position relative to the grid before zoom
+        float pre_zoom_mouse_x = (mouse_pos.x - current_pan_x) / (TILE_SIZE * old_zoom);
+        float pre_zoom_mouse_y = (mouse_pos.y - current_pan_y) / (TILE_SIZE * old_zoom);
         
-        // Calculate new pan to keep the mouse point fixed
-        target_pan_x = mouse_pos.x - (grid_mouse_x * TILE_SIZE * target_zoom_level);
-        target_pan_y = mouse_pos.y - (grid_mouse_y * TILE_SIZE * target_zoom_level);
+        // Calculate new pan to keep the mouse point fixed during zoom
+        target_pan_x = mouse_pos.x - (pre_zoom_mouse_x * TILE_SIZE * target_zoom_level);
+        target_pan_y = mouse_pos.y - (pre_zoom_mouse_y * TILE_SIZE * target_zoom_level);
+        current_pan_x = target_pan_x;
+        current_pan_y = target_pan_y;
     }
 
-    // Smooth pan method
     void pan(float dx, float dy) {
+        // Directly adjust pan targets
         target_pan_x += dx;
         target_pan_y += dy;
     }
 
-    // Update method to smoothly interpolate zoom and pan
     void update() {
-        // Smooth zoom lerping
-        current_zoom_level += (target_zoom_level - current_zoom_level) * zoom_lerp_speed;
+        // Smooth zoom interpolation
+        float zoom_diff = target_zoom_level - current_zoom_level;
+        if (std::abs(zoom_diff) > 0.00001f) {
+            current_zoom_level += zoom_diff * zoom_lerp_speed * 2.0f;
+        } else {
+            current_zoom_level = target_zoom_level;
+        }
         
-        // Smooth pan lerping
-        current_pan_x += (target_pan_x - current_pan_x) * pan_lerp_speed;
-        current_pan_y += (target_pan_y - current_pan_y) * pan_lerp_speed;
+        // Smooth pan interpolation
+        float pan_x_diff = target_pan_x - current_pan_x;
+        float pan_y_diff = target_pan_y - current_pan_y;
+        
+        // Use a more aggressive pan interpolation during zoom
+        float effective_pan_lerp = (std::abs(zoom_diff) > 0.001f) 
+            ? pan_lerp_speed * 2.0f 
+            : pan_lerp_speed;
+        
+        // Apply pan interpolation
+        if (std::abs(pan_x_diff) > 0.1f) {
+            current_pan_x += pan_x_diff * effective_pan_lerp;
+        } else {
+            current_pan_x = target_pan_x;
+        }
+        
+        if (std::abs(pan_y_diff) > 0.1f) {
+            current_pan_y += pan_y_diff * effective_pan_lerp;
+        } else {
+            current_pan_y = target_pan_y;
+        }
     }
 
     // Zoom and pan related member variables
@@ -573,7 +594,7 @@ Grid grid = Grid();
 void draw_grid(sf::RenderWindow& window) {
     static std::unordered_map<tile_t, sf::Color> colorMap;
 
-     int effective_tile_size = TILE_SIZE * grid.current_zoom_level;
+    int effective_tile_size = TILE_SIZE * grid.current_zoom_level;
 
     // Simplified offset calculation
     int offsetX = grid.current_pan_x;
@@ -658,13 +679,13 @@ void run() {
     // Pan speed for WASD and arrow keys
     const float PAN_SPEED = 100.0f;
 
-    // Existing event handlers with modifications
     const auto onClose = [&window](const sf::Event::Closed&) {
         frontend_message_queue.push(Message{Message::MessageType::EXIT});
         window.close();
     };
 
     const auto onResize = [&window](const sf::Event::Resized& resized) {
+        // Update the view size and center based on window size
         sf::View view;
         view.setSize(sf::Vector2f(static_cast<float>(resized.size.x), static_cast<float>(resized.size.y)));
         view.setCenter(sf::Vector2f(view.getSize().x / 2.f, view.getSize().y / 2.f));
@@ -721,7 +742,7 @@ void run() {
     const auto onMouseWheel = [&window](const sf::Event::MouseWheelScrolled& mouseScroll) {
         // Zoom in/out based on mouse wheel
         float zoom_factor = (mouseScroll.delta > 0) ? 1.1f : 0.9f;
-        grid.zoom(zoom_factor);
+        grid.zoom(zoom_factor, window);
     };
 
     // New handler for mouse drag

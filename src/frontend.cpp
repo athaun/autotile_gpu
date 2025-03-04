@@ -84,12 +84,7 @@ void draw_grid(sf::RenderWindow& window) {
 }
 
 void handle_tile_update(std::optional<Message> message) {
-    int x = message->location.x;
-    int y = message->location.y;
-    tile_t value = message->value;
-
-    // Update the grid
-    grid.update_tile(x, y, value);
+    grid.update_tile(message->location.x, message->location.y, message->value);
 }
 
 void handle_custom_message(std::optional<Message> message) {
@@ -108,19 +103,18 @@ void handle_custom_message(std::optional<Message> message) {
 
         grid.resize(new_width, new_height);
 
-        std::cout << "[FRONTEND] Resized grid to " << new_width << "x" << new_height << std::endl;
+        std::cout << "[FRONTEND] Set grid size to " << new_width << "x" << new_height << std::endl;
     } else {
-        std::cerr << "[FRONTEND] Unknown custom message: " << content << std::endl;
+        std::cerr << "[FRONTEND] Failed to handle message: " << content << std::endl;
     }
 }
 
 void run() {
     sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Tile Automata Simulator", sf::Style::Resize);
     window.setFramerateLimit(60);
-    
 
-    // const sf::Font font("arial.ttf");
-    // sf::Text text(font, "Hello SFML", 50);
+    const sf::Font font("arial.ttf");
+    sf::Text text(font, "AutoTile GPU\nRight Arrow Key -> Step simulation\nR -> Run simulation\nSpace -> Pause simulation\nP -> Print grid\nEsc -> Exit", 15);
 
     // Set up event handlers
     const auto onClose = [&window](const sf::Event::Closed&) {
@@ -172,9 +166,7 @@ void run() {
                 }
                 std::cout << std::endl;
             }
-        }
-
-        
+        }        
     };
 
     while (window.isOpen()) {
@@ -198,7 +190,7 @@ void run() {
 
         window.clear();
         draw_grid(window);
-        // window.draw(text);
+        window.draw(text);
         window.display();
     }
 

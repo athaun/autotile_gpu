@@ -55,7 +55,6 @@ void offset_locations(int offset_x, int offset_y) {
     }
 }
 
-
 void DeltaBuffer::push(delta_t delta) {
     if (count < MAX_DELTAS) {
         deltas[count++] = delta;
@@ -401,8 +400,6 @@ void check_transitions(tile_t& tile_a, const loc_t& location, std::vector<delta_
 			delta_t::Type::TRANSITION
     	};
 
-		// std::cout << "Possible transition: " << Tile::decode(tile_a) << " + " << Tile::decode(tile_b) << " -> " << Tile::decode(transition.to_a) << " + " << Tile::decode(transition.to_b) << "\n";
-
     	possible_deltas.push_back(delta);
     }
 }
@@ -465,12 +462,8 @@ void run_serial() {
 		check_attachment(tile_a, location, possible_deltas);
 
 		choose_delta(possible_deltas);
-
-		if (++ticks % 100 == 0) {
-			// log_deltas(delta_buffer);
-			send_deltas(delta_buffer);
-			apply_deltas(delta_buffer);
-		}
+        send_deltas(delta_buffer);        
+        apply_deltas(delta_buffer);
 	}
 }
 

@@ -98,6 +98,7 @@ def main(input_file, output_file):
             f.write(f"{encoded}\t{original}\n")
 
 if __name__ == "__main__":
-    INPUT_FILE = "bin/bincount.xml"
-    OUTPUT_FILE = "bin/bincount"
+    system = "test/test"
+    INPUT_FILE = f"{system}.xml"
+    OUTPUT_FILE = f"{system}"
     main(INPUT_FILE, OUTPUT_FILE)

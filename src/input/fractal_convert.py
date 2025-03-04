@@ -11,11 +11,14 @@ def generate_random_state():
 
 map = {}
 
-with open("finished.xml", 'r') as f:
+INPUT_FILE = "line/line.xml"
+OUTPUT_FILE = "line/line"
+
+with open(INPUT_FILE, 'r') as f:
     data = f.read()
 
 data = data.split('\n')
-states_xml, vtrans_xml, htrans_xml, vaff_xml, haff_xml = data[1], data[5], data[6], data[7], data[8]
+states_xml, vtrans_xml, htrans_xml, vaff_xml, haff_xml = data[1], data[5], data[6], data[7], data[8] # these numbers correspond to the siepinski triangle system
 
 original_states = []
 states, vtrans, htrans, vaff, haff = [], [], [], [], []
@@ -170,37 +173,37 @@ for hxml in haff_xml:
     haff.append([map[s1], map[s2], strength])
 
 # Writing to files
-with open('./sierpinski_triangle.seed', 'w') as f:
+with open(f'./{OUTPUT_FILE}.seed', 'w') as f:
     f.write(map['seed'] + ', ' + str(0) + ', ' + str(0) + '\n')
     f.write(map['Nl'] + ', ' + str(1) + ', ' + str(0) + '\n')
     f.write(map['Sl'] + ', ' + str(1) + ', ' + str(1) + '\n')
 
-with open('./sierpinski_triangle.states', 'w') as f:
+with open(f'./{OUTPUT_FILE}.states', 'w') as f:
     f.write(str(len(states)) + " States\n")
     for s in states:
         f.write(s + '\n')
 
-with open('./sierpinski_triangle.vtrans', 'w') as f:
+with open(f'./{OUTPUT_FILE}.vtrans', 'w') as f:
     f.write(str(len(vtrans)) + " Rules\n")
     for [s1, s2, s1_final, s2_final] in vtrans:
         f.write(s1+'+'+s2+'->'+s1_final+'+'+s2_final+'\n')
 
-with open('./sierpinski_triangle.htrans', 'w') as f:
+with open(f'./{OUTPUT_FILE}.htrans', 'w') as f:
     f.write(str(len(htrans)) + " Rules\n")
     for [s1, s2, s1_final, s2_final] in htrans:
         f.write(s1+'+'+s2+'->'+s1_final+'+'+s2_final+'\n')
 
-with open('./sierpinski_triangle.vaff', 'w') as f:
+with open(f'./{OUTPUT_FILE}.vaff', 'w') as f:
     f.write(str(len(vaff)) + " Affinities\n")
     for [s1, s2, strength] in vaff:
         f.write(s1+'+'+s2+','+strength+'\n')
 
-with open('./sierpinski_triangle.haff', 'w') as f:
+with open(f'./{OUTPUT_FILE}.haff', 'w') as f:
     f.write(str(len(haff)) + " Affinities\n")
     for [s1, s2, strength] in haff:
         f.write(s1+'+'+s2+','+strength+'\n')
 
 # Write the key mappings to a file
-with open("./sierpinski_triangle.key", 'w') as key_file:
+with open(f'./{OUTPUT_FILE}.key', 'w') as key_file:
     for original, encoded in map.items():
         key_file.write(f"{encoded}\t{original}\n")

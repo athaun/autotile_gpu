@@ -171,9 +171,9 @@ for hxml in haff_xml:
 
 # Writing to files
 with open('./sierpinski_triangle.seed', 'w') as f:
-    f.write(map['seed'] + ' ' + str(0) + ', ' + str(0) + '\n')
-    f.write(map['Nl'] + ' ' + str(1) + ', ' + str(0) + '\n')
-    f.write(map['Sl'] + ' ' + str(1) + ', ' + str(1) + '\n')
+    f.write(map['seed'] + ', ' + str(0) + ', ' + str(0) + '\n')
+    f.write(map['Nl'] + ', ' + str(1) + ', ' + str(0) + '\n')
+    f.write(map['Sl'] + ', ' + str(1) + ', ' + str(1) + '\n')
 
 with open('./sierpinski_triangle.states', 'w') as f:
     f.write(str(len(states)) + " States\n")
@@ -199,3 +199,8 @@ with open('./sierpinski_triangle.haff', 'w') as f:
     f.write(str(len(haff)) + " Affinities\n")
     for [s1, s2, strength] in haff:
         f.write(s1+'+'+s2+','+strength+'\n')
+
+# Write the key mappings to a file
+with open("state_keys.txt", 'w') as key_file:
+    for original, encoded in map.items():
+        key_file.write(f"{encoded}\t{original}\n")

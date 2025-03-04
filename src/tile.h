@@ -3,6 +3,7 @@
 #include "common.h"
 
 typedef uint32_t tile_t;
+
 namespace Tile {
     tile_t encode(const std::string& str);
     std::string decode(tile_t value);

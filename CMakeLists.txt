@@ -17,6 +17,31 @@ else()
     include_directories(${kompute_SOURCE_DIR}/src/lib)
 endif()
 
+include(FetchContent)
+
+
+
+
+
+include(FetchContent)
+FetchContent_Declare(SFML
+    GIT_REPOSITORY https://github.com/SFML/SFML.git
+    GIT_TAG 3.0.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(SFML)
+
+# set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_CXX_FLAGS_DEBUG "-g")
+
+FetchContent_Declare(
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 10.1.0
+)
+FetchContent_MakeAvailable(fmt)
+
 # Compiling shader
 # To add more shaders simply copy the vulkan_compile_shader command and replace it with your new shader
 vulkan_compile_shader(
@@ -26,12 +51,12 @@ vulkan_compile_shader(
 
 # Then add it to the library, so you can access it later in your code
 add_library(shader INTERFACE "src/shader/my_shader.hpp")
-target_include_directories(shader INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+target_include_directories(shader INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> ${SFML_SOURCE_DIR}/include)
 
 # Setting up main example code
 file(GLOB SOURCES "src/*.cpp")
 add_executable(AutoTile ${SOURCES})
-target_link_libraries(AutoTile PRIVATE shader kompute::kompute)
+target_link_libraries(AutoTile PRIVATE shader kompute::kompute fmt::fmt sfml-graphics sfml-window sfml-system)
 
 # Copy input folder to build directory
 file(COPY ${CMAKE_SOURCE_DIR}/src/input

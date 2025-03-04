@@ -4,10 +4,15 @@
 #include <thread>
 
 namespace Simulator {
+
+enum class SimState { RUNNING, PAUSED, STEP };
+SimState sim_state = SimState::PAUSED;
+
 Rules::Rules<Rules::transition_t> horizontal_transitions;
 Rules::Rules<Rules::transition_t> vertical_transitions;
 Rules::Rules<Rules::affinity_t> horizontal_affinities;
 Rules::Rules<Rules::affinity_t> vertical_affinities;
+
 Seed::grid_t grid;
 
 void DeltaBuffer::push(delta_t delta) {
@@ -66,11 +71,34 @@ void log_deltas(DeltaBuffer& buffer) {
 	print_grid();
 }
 
+void send_deltas(DeltaBuffer& buffer) {
+	for (size_t i = 0; i < buffer.count; i++) {
+		const delta_t& delta = buffer.deltas[i];
+
+		Message message_a, message_b;
+
+		message_a.type = Message::TILE_UPDATE;
+		message_a.location = delta.location_a;
+		message_a.value = delta.after.tile_a;
+
+		message_b.type = Message::TILE_UPDATE;
+		message_b.location = delta.location_b;
+		message_b.value = delta.after.tile_b;
+
+		simulator_message_queue.push(message_a);
+		simulator_message_queue.push(message_b);
+	}
+}
+
 void apply_deltas(DeltaBuffer& buffer) {
     if (buffer.count == 0) {
         // exit(0);
 		return;
     }
+
+	if (sim_state == SimState::STEP) {
+		sim_state = SimState::PAUSED;
+	}
 
     std::ofstream delta_file("deltas.txt", std::ios::app);  // Open in append mode
 	if (!delta_file.is_open()) {
@@ -96,11 +124,11 @@ void apply_deltas(DeltaBuffer& buffer) {
 	delta_file.close();
 
 	// Print the grid
-	std::cout << "\nApplied deltas:";
-	print_grid();
+	// std::cout << "\nApplied deltas:";
+	// print_grid();
 
 	// sleep for a bit
-	std::this_thread::sleep_for(std::chrono::milliseconds(40));
+	// std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	buffer.count = 0;
 }
@@ -289,6 +317,27 @@ void choose_delta(std::vector<delta_t>& possible_deltas) {
     possible_deltas.clear();
 }
 
+void process_control_messages() {
+    while (auto msg = frontend_message_queue.try_pop()) {
+
+        if (msg->type == Message::PAUSE) {
+            sim_state = SimState::PAUSED;
+			std::cout << "[BACKEND] Simulator paused." << std::endl;
+        } else if (msg->type == Message::STEP) {
+            sim_state = SimState::STEP;
+			std::cout << "[BACKEND] Simulator stepping." << std::endl;
+        } else if (msg->type == Message::RUN) {
+            sim_state = SimState::RUNNING;
+			std::cout << "[BACKEND] Simulator running." << std::endl;
+        } else if (msg->type == Message::EXIT) {
+			// TODO CLEANUP MEMORY :D
+			std::cout << "[BACKEND] Simulator exiting." << std::endl;
+			exit(0);
+		}
+    }
+}
+
+
 void run_serial() {
 	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
@@ -298,6 +347,13 @@ void run_serial() {
 
 	int ticks = 0;
 	while (true) {
+		process_control_messages();
+
+
+		if (sim_state == SimState::PAUSED) {
+			continue;
+		}
+		
 	    // Randomly select an X and Y coordinate in the grid
 		loc_t location = { rand() % grid.width, rand() % grid.height };
 		tile_t tile_a = grid.tiles[location.x + location.y * grid.width];
@@ -308,7 +364,8 @@ void run_serial() {
 		choose_delta(possible_deltas);
 
 		if (++ticks % 100 == 0) {
-			log_deltas(delta_buffer);
+			// log_deltas(delta_buffer);
+			send_deltas(delta_buffer);
 			apply_deltas(delta_buffer);
 		}
 	}

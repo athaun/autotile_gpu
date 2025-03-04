@@ -63,6 +63,14 @@ grid_t load(std::string filepath) {
     grid.tiles = new tile_t[grid.width * grid.height]();
     std::fill(grid.tiles, grid.tiles + grid.width * grid.height, Rules::EMPTY_TILE);
 
+	Message grid_message;
+	grid_message.type = Message::MessageType::CUSTOM;
+	grid_message.content = "GRID_SIZE," + std::to_string(grid.width) + "," + std::to_string(grid.height);
+	simulator_message_queue.push(grid_message);
+
+	Message message;
+	message.type = Message::MessageType::TILE_UPDATE;
+
 	// Copy the seed data into the new grid with centering
     for (const auto& [x, y, tile] : seed_data) {
         int new_x = (x - min_x) + offset_x;
@@ -70,6 +78,10 @@ grid_t load(std::string filepath) {
         grid.tiles[new_y * grid.width + new_x] = Tile::encode(tile);
         std::cout << "Seed Tile: " << tile << "\tEncoded: " << Tile::encode(tile) 
                   << "\tNew Pos: (" << new_x << ", " << new_y << ")" << std::endl;
+
+		message.location = { new_x, new_y };
+		message.value = Tile::encode(tile);
+		simulator_message_queue.push(message);
     }
 
 	return grid;

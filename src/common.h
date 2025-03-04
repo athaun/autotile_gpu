@@ -16,3 +16,5 @@
 #include "seed.h"
 #include "rules.h"
 #include "simulator.h"
+#include "frontend.h"
+#include "thread_communication.h"

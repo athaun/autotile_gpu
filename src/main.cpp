@@ -7,7 +7,7 @@ int main() {
     // Simulator::init("bin/bincount");
     // Simulator::init("test/test");
     // Simulator::init("longline/test");
-    Simulator::init("infinite_cross/cross");
+    Simulator::init("fractal2/fractal");
 
     // Create threads for the frontend and simulator
     std::thread frontend_thread(Frontend::run);

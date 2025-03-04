@@ -154,13 +154,20 @@ void apply_deltas(DeltaBuffer& buffer) {
             delta.location_a.y < 2)  {
             
             resize_grid(grid, resize_offset_x, resize_offset_y);
-			buffer.count = 0;
-            return;
+			// buffer.count = 0;
+            // return;
         }
     }
 
     for (size_t i = 0; i < buffer.count; i++) {
         delta_t& delta = buffer.deltas[i];
+
+        if (resize_offset_x != 0 || resize_offset_y != 0) {
+            delta.location_a.x += resize_offset_x;
+            delta.location_a.y += resize_offset_y;
+            delta.location_b.x += resize_offset_x;
+            delta.location_b.y += resize_offset_y;
+        }
 
         tile_t& tile_a = grid.tiles[delta.location_a.x + delta.location_a.y * grid.width];
         tile_t& tile_b = grid.tiles[delta.location_b.x + delta.location_b.y * grid.width];

@@ -117,7 +117,16 @@ void handle_custom_message(std::optional<Message> message) {
 }
 
 void run() {
-    sf::RenderWindow window(sf::VideoMode::getDesktopMode(), "Tile Automata Simulator", sf::Style::Resize);
+
+    sf::ContextSettings settings;
+    settings.depthBits = 24;
+    settings.stencilBits = 8;
+    settings.majorVersion = 3;
+    settings.minorVersion = 0;
+
+    sf::RenderWindow window;
+    window.create(sf::VideoMode::getDesktopMode(), "Tile Automata Simulator", sf::Style::Resize, sf::State::Windowed, settings);
+
     window.setFramerateLimit(60);
 
     const sf::Font font("arial.ttf");

@@ -154,8 +154,6 @@ void apply_deltas(DeltaBuffer& buffer) {
             delta.location_a.y < 2)  {
             
             resize_grid(grid, resize_offset_x, resize_offset_y);
-			// buffer.count = 0;
-            // return;
         }
     }
 
@@ -410,7 +408,7 @@ void run_serial() {
 		choose_delta(possible_deltas);
 
 		if (++ticks % 100 == 0) {
-			log_deltas(delta_buffer);
+			// log_deltas(delta_buffer);
 			send_deltas(delta_buffer);
 			apply_deltas(delta_buffer);
 		}

@@ -172,7 +172,7 @@ affinity_t parse_rule(std::string rule_str) {
  * Load rules from a file and return a Rules object of either transition_t or affinity_t
  * @param filepath The path to the file containing the rules, either a .htrans, .vtrans, or .haff, .vaff file.
  * 
- * Rule files are always located in the input/ directory.
+ * Rule files are always located in the assets/ directory.
  * 
  * Transition files are formatted as:
  * <number of rules> Transitions

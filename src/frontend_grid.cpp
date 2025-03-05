@@ -25,6 +25,16 @@ namespace Frontend {
         current_pan_y = target_pan_y;
     }
 
+    void DisplayGrid::reset(int width, int height) {
+        std::fill(tiles, tiles + width * height, Rules::EMPTY_TILE);
+        target_zoom_level = 1.0f;
+        current_zoom_level = 1.0f;
+        target_pan_x = 0.0f;
+        target_pan_y = 0.0f;
+        current_pan_x = 0.0f;
+        current_pan_y = 0.0f;
+    }
+
     void DisplayGrid::update_tile(int x, int y, tile_t value) {
         tiles[x + y * width] = value;
     }

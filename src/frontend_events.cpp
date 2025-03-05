@@ -5,9 +5,8 @@ namespace Frontend {
     const float PAN_SPEED = 100.0f;
 
     void on_close(const std::optional<sf::Event::Closed>& event, sf::RenderWindow& window) {
-        frontend_message_queue.push(Message{Message::MessageType::EXIT});
-        ImGui::SFML::Shutdown();
         window.close();
+        frontend_message_queue.push(Message{Message::MessageType::EXIT});
     }
 
     void on_resize(const std::optional<sf::Event::Resized>& resized, sf::RenderWindow& window) {
@@ -19,20 +18,6 @@ namespace Frontend {
     }
 
     void on_key_press(const std::optional<sf::Event::KeyPressed>& keyPressed, sf::RenderWindow& window, DisplayGrid& grid) {
-        // Panning with WASD and arrow keys
-        if (keyPressed->code == sf::Keyboard::Key::A) {
-            grid.smooth_pan(PAN_SPEED, 0);
-        }
-        if (keyPressed->code == sf::Keyboard::Key::D) {
-            grid.smooth_pan(-PAN_SPEED, 0);
-        }
-        if (keyPressed->code == sf::Keyboard::Key::W) {
-            grid.smooth_pan(0, PAN_SPEED);
-        }
-        if (keyPressed->code == sf::Keyboard::Key::S) {
-            grid.smooth_pan(0, -PAN_SPEED);
-        }
-
         // Existing simulation control key handlers
         if (keyPressed->code == sf::Keyboard::Key::Escape) {
             frontend_message_queue.push(Message{Message::MessageType::EXIT});

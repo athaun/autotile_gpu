@@ -28,6 +28,8 @@ public:
         delete[] tiles;
     }
 
+    void reset(int width, int height);
+
     void resize(int new_width, int new_height, int offset_x, int offset_y);
 
     void update_tile(int x, int y, tile_t value);

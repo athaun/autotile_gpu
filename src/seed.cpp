@@ -76,9 +76,6 @@ grid_t load(std::string filepath) {
         int new_x = (x - min_x) + offset_x;
         int new_y = (y - min_y) + offset_y;
         grid.tiles[new_y * grid.width + new_x] = Tile::encode(tile);
-        std::cout << "Seed Tile: " << tile << "\tEncoded: " << Tile::encode(tile) 
-                  << "\tNew Pos: (" << new_x << ", " << new_y << ")" << std::endl;
-
 		message.location = { new_x, new_y };
 		message.value = Tile::encode(tile);
 		simulator_message_queue.push(message);

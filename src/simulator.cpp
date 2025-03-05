@@ -65,20 +65,38 @@ void DeltaBuffer::push(delta_t delta) {
 
 DeltaBuffer delta_buffer;
 
+std::string system_name_cache;
 void init(std::string system_name) {
-    system_name = "input/" + system_name;
 
-	grid = Seed::load(system_name + ".seed");
+    system_name_cache = "assets/systems/" + system_name;
+
+	grid = Seed::load(system_name_cache + ".seed");
 
     initialize_available_locations();
 
-	Rules::load(system_name + ".htrans", horizontal_transitions);
-    Rules::load(system_name + ".vtrans", vertical_transitions);
+	Rules::load(system_name_cache + ".htrans", horizontal_transitions);
+    Rules::load(system_name_cache + ".vtrans", vertical_transitions);
 
-    Rules::load(system_name + ".haff", horizontal_affinities);
-    Rules::load(system_name + ".vaff", vertical_affinities);
+    Rules::load(system_name_cache + ".haff", horizontal_affinities);
+    Rules::load(system_name_cache + ".vaff", vertical_affinities);
 
-	Rules::load_name_keys(system_name + ".key", Tile::name_keys);
+	Rules::load_name_keys(system_name_cache + ".key", Tile::name_keys);
+}
+
+void reset_simulation() {
+    Message message;
+    message.type = Message::MessageType::RESET;
+    message.content = "RESET_SIZE," + std::to_string(grid.width) + "," + std::to_string(grid.height);
+    simulator_message_queue.push(message);
+
+    grid = Seed::load(system_name_cache + ".seed");
+
+    available_locations.clear();
+    initialize_available_locations();
+
+    delta_buffer.count = 0;
+
+    sim_state = SimState::PAUSED;    
 }
 
 void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y, loc_t attachment_location) {
@@ -424,23 +442,28 @@ void choose_delta(std::vector<delta_t>& possible_deltas) {
     possible_deltas.clear();
 }
 
+#include <fmt/core.h>
+
 void process_control_messages() {
     while (auto msg = frontend_message_queue.try_pop()) {
 
         if (msg->type == Message::PAUSE) {
             sim_state = SimState::PAUSED;
-			std::cout << "[BACKEND] Simulator paused." << std::endl;
+            fmt::print("[BACKEND] Simulator paused.\n");
         } else if (msg->type == Message::STEP) {
             sim_state = SimState::STEP;
-			std::cout << "[BACKEND] Simulator stepping." << std::endl;
+            fmt::print("[BACKEND] Simulator stepping.\n");
         } else if (msg->type == Message::RUN) {
             sim_state = SimState::RUNNING;
-			std::cout << "[BACKEND] Simulator running." << std::endl;
+            fmt::print("[BACKEND] Simulator running.\n");
+        } else if (msg->type == Message::RESET) {
+            reset_simulation();
+            fmt::print("[BACKEND] Simulator reset.\n");
         } else if (msg->type == Message::EXIT) {
-			// TODO CLEANUP MEMORY :D
-			std::cout << "[BACKEND] Simulator exiting." << std::endl;
-			exit(0);
-		}
+            // TODO CLEANUP MEMORY :D
+            fmt::print("[BACKEND] Simulator exiting.\n");
+            exit(0);
+        }
     }
 }
 

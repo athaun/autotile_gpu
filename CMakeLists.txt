@@ -74,5 +74,5 @@ add_executable(AutoTile ${SOURCES})
 target_link_libraries(AutoTile PRIVATE shader kompute::kompute fmt::fmt sfml-graphics sfml-window sfml-system ImGui-SFML::ImGui-SFML)
 
 # Copy input folder to build directory
-file(COPY ${CMAKE_SOURCE_DIR}/src/input
+file(COPY ${CMAKE_SOURCE_DIR}/assets
      DESTINATION ${CMAKE_BINARY_DIR}/)

@@ -49,9 +49,6 @@ void run() {
 
     window.setFramerateLimit(60);
 
-    const sf::Font font("arial.ttf");
-    sf::Text text(font, "AutoTile GPU\nWASD/Arrow Keys -> Pan\nScroll -> Zoom\nRight Arrow -> Step simulation\nR -> Run simulation\nSpace -> Pause simulation\nP -> Print grid\nEsc -> Exit", 15);
-
     // Pan speed for WASD and arrow keys
     const float PAN_SPEED = 100.0f;
 
@@ -163,7 +160,6 @@ void run() {
 
         window.clear();
         grid.draw(window);
-        window.draw(text);
         window.display();
     }
 }

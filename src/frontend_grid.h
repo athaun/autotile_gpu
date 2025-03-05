@@ -7,9 +7,9 @@
 namespace Frontend {
     extern int TILE_SIZE;
 
-    class Grid {
+    class DisplayGrid {
 public:
-    Grid() : 
+    DisplayGrid() : 
         tiles(new tile_t[0]()), 
         current_zoom_level(1.0f), 
         target_zoom_level(1.0f),
@@ -24,7 +24,7 @@ public:
         is_dragging(false)
     {}
 
-    ~Grid() {
+    ~DisplayGrid() {
         delete[] tiles;
     }
 
@@ -37,6 +37,8 @@ public:
     void zoom(float delta, sf::RenderWindow& window);
 
     void pan(float dx, float dy);
+
+    void smooth_pan(float dx, float dy);
 
     void update();
 

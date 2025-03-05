@@ -6,11 +6,12 @@
 #include <imgui-SFML.h>
 #include <imgui.h>
 #include <cmath>
+#include "frontend_grid.h"
+#include "frontend_events.h"
 
 namespace Frontend {
 
-
-Grid grid = Grid();
+DisplayGrid grid = DisplayGrid();
 
 void handle_tile_update(std::optional<Message> message) {
     grid.update_tile(message->location.x, message->location.y, message->value);
@@ -57,94 +58,6 @@ void run() {
         return;
     }
 
-    // Pan speed for WASD and arrow keys
-    const float PAN_SPEED = 100.0f;
-
-    const auto onClose = [&window](const std::optional<sf::Event::Closed>& event) {
-        frontend_message_queue.push(Message{Message::MessageType::EXIT});
-        ImGui::SFML::Shutdown();
-        window.close();
-    };
-
-    const auto onResize = [&window](const std::optional<sf::Event::Resized>& resized) {
-        // Update the view size and center based on window size
-        sf::View view;
-        view.setSize(sf::Vector2f(static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)));
-        view.setCenter(sf::Vector2f(view.getSize().x / 2.f, view.getSize().y / 2.f));
-        window.setView(view);
-    };
-
-    const auto onKeyPress = [&window, PAN_SPEED](const std::optional<sf::Event::KeyPressed>& keyPressed) {
-        // Panning with WASD and arrow keys
-        if (keyPressed->code == sf::Keyboard::Key::A) {
-            grid.pan(PAN_SPEED, 0);
-        }
-        if (keyPressed->code == sf::Keyboard::Key::D) {
-            grid.pan(-PAN_SPEED, 0);
-        }
-        if (keyPressed->code == sf::Keyboard::Key::W) {
-            grid.pan(0, PAN_SPEED);
-        }
-        if (keyPressed->code == sf::Keyboard::Key::S) {
-            grid.pan(0, -PAN_SPEED);
-        }
-
-        // Existing simulation control key handlers
-        if (keyPressed->code == sf::Keyboard::Key::Escape) {
-            frontend_message_queue.push(Message{Message::MessageType::EXIT});
-            window.close();
-        }
-        if (keyPressed->code == sf::Keyboard::Key::Space) {
-            frontend_message_queue.push(Message{Message::MessageType::PAUSE});
-        }
-        if (keyPressed->code == sf::Keyboard::Key::Right) {
-            frontend_message_queue.push(Message{Message::MessageType::STEP});
-        }
-        if (keyPressed->code == sf::Keyboard::Key::R) {
-            frontend_message_queue.push(Message{Message::MessageType::RUN});
-        }
-        if (keyPressed->code == sf::Keyboard::Key::P) {
-            for (int y = grid.height - 1; y >= 0; --y) {
-                for (int x = 0; x < grid.width; ++x) {
-                    std::cout << Tile::decode(grid.get_tile(x, y)) << " ";
-                }
-                std::cout << std::endl;
-            }
-            std::cout << std::endl;
-            for (int y = grid.height - 1; y >= 0; --y) {
-                for (int x = 0; x < grid.width; ++x) {
-                    std::cout << std::setw(13) << Tile::name(grid.get_tile(x, y)) << " ";
-                }
-                std::cout << std::endl;
-            }
-        }        
-    };
-
-    // New handler for mouse wheel zoom
-    const auto onMouseWheel = [&window](const std::optional<sf::Event::MouseWheelScrolled>& mouseScroll) {
-        // Zoom in/out based on mouse wheel
-        float zoom_factor = (mouseScroll->delta > 0) ? 1.1f : 0.9f;
-        grid.zoom(zoom_factor, window);
-    };
-
-    // New handler for mouse drag
-    const auto onMouseDrag = [&window](const std::optional<sf::Event::MouseMoved>& mouseMoved) {
-        if (sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
-            if (!grid.is_dragging) {
-                grid.last_mouse_x = mouseMoved->position.x;
-                grid.last_mouse_y = mouseMoved->position.y;
-                grid.is_dragging = true;
-            }
-            float dx = mouseMoved->position.x - grid.last_mouse_x;
-            float dy = mouseMoved->position.y - grid.last_mouse_y;
-            grid.pan(dx, dy);
-            grid.last_mouse_x = mouseMoved->position.x;
-            grid.last_mouse_y = mouseMoved->position.y;
-        } else {
-            grid.is_dragging = false;
-        }
-    };
-
     sf::Clock clock;
     while (window.isOpen()) {
         std::optional<sf::Event> event;
@@ -156,15 +69,15 @@ void run() {
             if (!io.WantCaptureKeyboard && !io.WantCaptureMouse) {
                 // Handle the event based on its type
                 if (const auto* closed = event->getIf<sf::Event::Closed>()) {
-                    onClose(*closed);
+                    on_close(*closed, window);
                 } else if (const auto* resized = event->getIf<sf::Event::Resized>()) {
-                    onResize(*resized);
+                    on_resize(*resized, window);
                 } else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
-                    onKeyPress(*keyPressed);
+                    on_key_press(*keyPressed, window, grid);
                 } else if (const auto* mouseWheel = event->getIf<sf::Event::MouseWheelScrolled>()) {
-                    onMouseWheel(*mouseWheel);
+                    on_mouse_wheel(*mouseWheel, window, grid);
                 } else if (const auto* mouseMoved = event->getIf<sf::Event::MouseMoved>()) {
-                    onMouseDrag(*mouseMoved);
+                    on_mouse_drag(*mouseMoved, window, grid);
                 }
             }
         }

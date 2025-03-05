@@ -4,7 +4,7 @@
 namespace Frontend {
     int TILE_SIZE = 100;
 
-    void Grid::resize(int new_width, int new_height, int offset_x = 0, int offset_y = 0) {
+    void DisplayGrid::resize(int new_width, int new_height, int offset_x = 0, int offset_y = 0) {
         tile_t* new_tiles = new tile_t[new_width * new_height]();
         std::fill(new_tiles, new_tiles + new_width * new_height, Rules::EMPTY_TILE);
 
@@ -25,15 +25,15 @@ namespace Frontend {
         current_pan_y = target_pan_y;
     }
 
-    void Grid::update_tile(int x, int y, tile_t value) {
+    void DisplayGrid::update_tile(int x, int y, tile_t value) {
         tiles[x + y * width] = value;
     }
 
-    tile_t Grid::get_tile(int x, int y) {
+    tile_t DisplayGrid::get_tile(int x, int y) {
         return tiles[x + y * width];
     }
 
-    void Grid::zoom(float delta, sf::RenderWindow& window) {
+    void DisplayGrid::zoom(float delta, sf::RenderWindow& window) {
         // Store the previous zoom level
         float old_zoom = target_zoom_level;
         
@@ -54,13 +54,19 @@ namespace Frontend {
         current_pan_y = target_pan_y;
     }
 
-    void Grid::pan(float dx, float dy) {
-        // Directly adjust pan targets
+    void DisplayGrid::pan(float dx, float dy) {
+        target_pan_x += dx;
+        target_pan_y += dy;
+        current_pan_x = target_pan_x;
+        current_pan_y = target_pan_y;
+    }
+
+    void DisplayGrid::smooth_pan(float dx, float dy) {
         target_pan_x += dx;
         target_pan_y += dy;
     }
 
-    void Grid::update() {
+    void DisplayGrid::update() {
         // Smooth zoom interpolation
         float zoom_diff = target_zoom_level - current_zoom_level;
         if (std::abs(zoom_diff) > 0.00001f) {
@@ -92,7 +98,7 @@ namespace Frontend {
         }
     }
 
-    void Grid::draw(sf::RenderWindow& window) {
+    void DisplayGrid::draw(sf::RenderWindow& window) {
         static std::unordered_map<tile_t, sf::Color> colorMap;
 
         int tile_view_size = TILE_SIZE * current_zoom_level;

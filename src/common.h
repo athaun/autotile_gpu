@@ -16,7 +16,7 @@
 #include "seed.h"
 #include "rules.h"
 #include "simulator.h"
-#include "frontend.h"
+
 #include "thread_communication.h"
 #include "timer.h"
-#include "frontend_grid.h"
+#include "frontend.h"

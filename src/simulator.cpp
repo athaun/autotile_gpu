@@ -136,11 +136,9 @@ void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y,
 
     Message grid_message;
     grid_message.type = Message::MessageType::CUSTOM;
-    grid_message.content = "GRID_RESIZE," + std::to_string(grid.width) + "," + 
-										  std::to_string(grid.height) + "," + 
-										  std::to_string(resize_offset_x) + "," + 
-										  std::to_string(resize_offset_y);
+    grid_message.content = fmt::format("GRID_RESIZE,{},{},{},{}", grid.width, grid.height, resize_offset_x, resize_offset_y);
     simulator_message_queue.push(grid_message);
+
     sim_state = SimState::PAUSED;
 }
 
@@ -477,8 +475,6 @@ void run_serial() {
 			continue;
 		}
 		
-	    // Randomly select an X and Y coordinate in the grid
-		// loc_t location = { rand() % grid.width, rand() % grid.height };
         loc_t location = choose_random_location();
 		tile_t tile_a = grid.tiles[location.x + location.y * grid.width];
 

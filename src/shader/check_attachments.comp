@@ -1,0 +1,174 @@
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// Input grid data
+layout(set = 0, binding = 0) buffer GridTiles {
+    uint tiles[];
+};
+
+// Grid dimensions
+layout(set = 0, binding = 1) uniform GridInfo {
+    uint width;
+    uint height;
+    uint padding1;
+    uint padding2;
+};
+
+// Affinity rules
+layout(set = 0, binding = 2) buffer HorizontalAffinities {
+    uint key_a[];
+};
+layout(set = 0, binding = 3) buffer HorizontalAffinitiesResults {
+    uint result_a[];
+};
+layout(set = 0, binding = 4) buffer VerticalAffinities {
+    uint key_b[];
+};
+layout(set = 0, binding = 5) buffer VerticalAffinitiesResults {
+    uint result_b[];
+};
+
+// Output deltas (possible attachments)
+layout(set = 0, binding = 6) buffer PossibleDeltas {
+    uint count;
+    Delta deltas[];
+};
+
+// Constants
+const uint EMPTY_TILE = 0;
+const uint LOCK_BIT = 0x80000000;
+
+// Helper functions
+bool is_locked(uint tile) {
+    return (tile & LOCK_BIT) != 0;
+}
+
+uint get_tile(uint x, uint y) {
+    if (x >= width || y >= height) {
+        return EMPTY_TILE;
+    }
+    return tiles[x + y * width];
+}
+
+// Get affinity result for a pair of tiles
+uint find_horizontal_affinity(uint tile_a, uint tile_b, bool use_tile_a) {
+    // Simple linear search through affinities (in practice, you'd use a more efficient lookup)
+    for (uint i = 0; i < key_a.length() / 2; i++) {
+        if (key_a[i*2] == tile_a && key_a[i*2+1] == tile_b) {
+            return result_a[i];
+        }
+    }
+    return 0xFFFFFFFF; // Invalid affinity
+}
+
+uint find_vertical_affinity(uint tile_a, uint tile_b, bool use_tile_a) {
+    // Simple linear search through affinities
+    for (uint i = 0; i < key_b.length() / 2; i++) {
+        if (key_b[i*2] == tile_a && key_b[i*2+1] == tile_b) {
+            return result_b[i];
+        }
+    }
+    return 0xFFFFFFFF; // Invalid affinity
+}
+
+void main() {
+    // Get global position from gl_GlobalInvocationID
+    uint x = gl_GlobalInvocationID.x;
+    uint y = gl_GlobalInvocationID.y;
+    
+    // Skip if out of bounds
+    if (x >= width || y >= height) {
+        return;
+    }
+    
+    // Get center tile
+    uint center_tile = get_tile(x, y);
+    
+    // Neighborhood directions: Right, Up, Left, Down
+    ivec2 neighborhood[4] = ivec2[4](
+        ivec2(1, 0),  // Right
+        ivec2(0, -1), // Up
+        ivec2(-1, 0), // Left
+        ivec2(0, 1)   // Down
+    );
+    
+    // Check each direction
+    for (int dir = 0; dir < 4; dir++) {
+        // Calculate neighbor position
+        uint nx = x + neighborhood[dir].x;
+        uint ny = y + neighborhood[dir].y;
+        
+        // Skip if out of bounds
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+            continue;
+        }
+        
+        // Get neighbor tile
+        uint neighbor_tile = get_tile(nx, ny);
+        
+        // Skip if both tiles are empty
+        if (center_tile == EMPTY_TILE && neighbor_tile == EMPTY_TILE) {
+            continue;
+        }
+        
+        // Skip if both tiles are filled
+        if (center_tile != EMPTY_TILE && neighbor_tile != EMPTY_TILE) {
+            continue;
+        }
+        
+        // Skip if either tile is locked (and not empty)
+        if ((is_locked(center_tile) && center_tile != EMPTY_TILE) || 
+            (is_locked(neighbor_tile) && neighbor_tile != EMPTY_TILE)) {
+            continue;
+        }
+        
+        // Determine affinity based on direction
+        uint affinity_result;
+        uint before_tile_a, before_tile_b;
+        uint location_a_x, location_a_y, location_b_x, location_b_y;
+        
+        if (dir < 2) { // Right and Up
+            // Using horizontal affinities for Right, vertical for Up
+            affinity_result = (dir == 0) ? 
+                find_horizontal_affinity(center_tile, neighbor_tile, true) :
+                find_vertical_affinity(center_tile, neighbor_tile, true);
+                
+            before_tile_a = center_tile;
+            before_tile_b = neighbor_tile;
+            location_a_x = x;
+            location_a_y = y;
+            location_b_x = nx;
+            location_b_y = ny;
+        } else { // Left and Down
+            // Using horizontal affinities for Left, vertical for Down
+            affinity_result = (dir == 2) ? 
+                find_horizontal_affinity(neighbor_tile, center_tile, false) :
+                find_vertical_affinity(neighbor_tile, center_tile, false);
+                
+            before_tile_a = neighbor_tile;
+            before_tile_b = center_tile;
+            location_a_x = nx;
+            location_a_y = ny;
+            location_b_x = x;
+            location_b_y = y;
+        }
+        
+        // Skip if affinity is invalid
+        if (affinity_result == 0xFFFFFFFF) {
+            continue;
+        }
+        
+        // Add delta to possible deltas
+        uint index = atomicAdd(count, 1);
+        deltas[index].before_tile_a = before_tile_a;
+        deltas[index].before_tile_b = before_tile_b;
+        deltas[index].after_tile_a = (affinity_result >> 16) & 0xFFFF; // Extract tile_a from affinity result
+        deltas[index].after_tile_b = affinity_result & 0xFFFF;  // Extract tile_b from affinity result
+        deltas[index].location_a_x = location_a_x;
+        deltas[index].location_a_y = location_a_y;
+        deltas[index].location_b_x = location_b_x;
+        deltas[index].location_b_y = location_b_y;
+        deltas[index].type = 0; // Type: ATTACHMENT
+    }
+}

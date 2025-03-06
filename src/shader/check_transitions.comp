@@ -1,0 +1,139 @@
+#version 450
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+// Input grid data
+layout(set = 0, binding = 0) buffer GridTiles {
+    uint tiles[];
+};
+
+// Grid dimensions
+layout(set = 0, binding = 1) uniform GridInfo {
+    uint width;
+    uint height;
+    uint padding1;
+    uint padding2;
+};
+
+// Transition rules
+layout(set = 0, binding = 2) buffer HorizontalTransitions {
+    uint key_h[];
+};
+layout(set = 0, binding = 3) buffer HorizontalTransitionsResults {
+    uint result_h[];
+};
+layout(set = 0, binding = 4) buffer VerticalTransitions {
+    uint key_v[];
+};
+layout(set = 0, binding = 5) buffer VerticalTransitionsResults {
+    uint result_v[];
+};
+
+// Output deltas (possible transitions)
+layout(set = 0, binding = 6) buffer PossibleDeltas {
+    uint count;
+    Delta deltas[];
+};
+
+// Constants
+const uint EMPTY_TILE = 0;
+const uint LOCK_BIT = 0x80000000;
+
+// Helper functions
+bool is_locked(uint tile) {
+    return (tile & LOCK_BIT) != 0;
+}
+
+uint get_tile(uint x, uint y) {
+    if (x >= width || y >= height) {
+        return EMPTY_TILE;
+    }
+    return tiles[x + y * width];
+}
+
+// Get transition result for a pair of tiles
+uint find_horizontal_transition(uint tile_a, uint tile_b) {
+    // Simple linear search through transitions
+    for (uint i = 0; i < key_h.length() / 2; i++) {
+        if (key_h[i*2] == tile_a && key_h[i*2+1] == tile_b) {
+            return result_h[i];
+        }
+    }
+    return 0xFFFFFFFF; // Invalid transition
+}
+
+uint find_vertical_transition(uint tile_a, uint tile_b) {
+    // Simple linear search through transitions
+    for (uint i = 0; i < key_v.length() / 2; i++) {
+        if (key_v[i*2] == tile_a && key_v[i*2+1] == tile_b) {
+            return result_v[i];
+        }
+    }
+    return 0xFFFFFFFF; // Invalid transition
+}
+
+void main() {
+    // Get global position
+    uint x = gl_GlobalInvocationID.x;
+    uint y = gl_GlobalInvocationID.y;
+    
+    // Skip if out of bounds
+    if (x >= width || y >= height) {
+        return;
+    }
+    
+    // Get current tile
+    uint tile_a = get_tile(x, y);
+    
+    // Skip if locked
+    if (is_locked(tile_a)) {
+        return;
+    }
+    
+    // Check horizontal and vertical transitions (Right and Up only)
+    ivec2 directions[2] = ivec2[2](
+        ivec2(1, 0),  // Right (horizontal)
+        ivec2(0, -1)  // Up (vertical)
+    );
+    
+    for (int dir = 0; dir < 2; dir++) {
+        // Calculate neighbor position
+        uint nx = x + directions[dir].x;
+        uint ny = y + directions[dir].y;
+        
+        // Skip if out of bounds
+        if (nx >= width || ny >= height) {
+            continue;
+        }
+        
+        // Get neighbor tile
+        uint tile_b = get_tile(nx, ny);
+        
+        // Skip if neighbor is locked
+        if (is_locked(tile_b)) {
+            continue;
+        }
+        
+        // Find transition based on direction
+        uint transition = dir == 0 ? 
+            find_horizontal_transition(tile_a, tile_b) :
+            find_vertical_transition(tile_a, tile_b);
+        
+        // Skip if transition is invalid
+        if (transition == 0xFFFFFFFF) {
+            continue;
+        }
+        
+        // Add delta to possible transitions
+        uint index = atomicAdd(count, 1);
+        deltas[index].before_tile_a = tile_a;
+        deltas[index].before_tile_b = tile_b;
+        deltas[index].after_tile_a = (transition >> 16) & 0xFFFF; // Extract to_a from transition result
+        deltas[index].after_tile_b = transition & 0xFFFF;  // Extract to_b from transition result
+        deltas[index].location_a_x = x;
+        deltas[index].location_a_y = y;
+        deltas[index].location_b_x = nx;
+        deltas[index].location_b_y = ny;
+        deltas[index].type = 1; // Type: TRANSITION
+    }
+}

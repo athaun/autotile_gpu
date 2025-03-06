@@ -2,7 +2,7 @@
 #include <vector>
 
 namespace Frontend {
-    int TILE_SIZE = 100;
+    int TILE_SIZE = 50;
 
     void DisplayGrid::resize(int new_width, int new_height, int offset_x = 0, int offset_y = 0) {
         tile_t* new_tiles = new tile_t[new_width * new_height]();

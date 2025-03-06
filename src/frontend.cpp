@@ -164,8 +164,8 @@ void run() {
         imgui();
 
         window.clear();
-        ImGui::SFML::Render(window);
         grid.draw(window);
+        ImGui::SFML::Render(window);
         window.display();
     }
 

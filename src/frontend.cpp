@@ -12,6 +12,7 @@
 
 namespace Frontend {
 
+bool simulation_paused = true;
 DisplayGrid grid = DisplayGrid();
 
 void handle_tile_update(std::optional<Message> message) {
@@ -56,7 +57,7 @@ void handle_custom_message(std::optional<Message> message) {
 
         grid.reset(width, height);
 
-        fmt::print("[FRONTEND] Reset display grid.\n");
+        fmt::print("[FRONTEND] Reset display grid, size {}x{}.\n", width, height);
     } else {
         fmt::print("[FRONTEND] Failed to handle message: {}\n", content);
     }

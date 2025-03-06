@@ -72,8 +72,6 @@ namespace Frontend {
     }
 
     void top_bar() {
-        static bool running = false;
-
         // Set window flags to make it full-width and hide the collapsible bar
         ImGui::Begin("Top Bar", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoTitleBar);
         
@@ -85,7 +83,6 @@ namespace Frontend {
 
         // Step Button
         if (ImGui::Button("Exit")) {
-            running = false;
             frontend_message_queue.push({Message::MessageType::EXIT});
         }
 
@@ -93,7 +90,7 @@ namespace Frontend {
 
         // Step Button
         if (ImGui::Button("Reset")) {
-            running = false;
+            simulation_paused = true;
             frontend_message_queue.push({Message::MessageType::RESET});
         }
 
@@ -101,19 +98,19 @@ namespace Frontend {
 
         // Step Button
         if (ImGui::Button("Step")) {
-            running = false;
             frontend_message_queue.push({Message::MessageType::STEP});
+            simulation_paused = true;
         }
 
         ImGui::SameLine();
 
         // Play/Pause Button
-        if (ImGui::Button(running ? "Pause" : "Play")) {
-            running = !running;
-            if (running) {
-                frontend_message_queue.push({Message::MessageType::RUN});
-            } else {
+        if (ImGui::Button(simulation_paused ? "Play" : "Pause")) {
+            simulation_paused = !simulation_paused;
+            if (simulation_paused) {
                 frontend_message_queue.push({Message::MessageType::PAUSE});
+            } else {
+                frontend_message_queue.push({Message::MessageType::RUN});
             }
         }
         ImGui::SameLine();

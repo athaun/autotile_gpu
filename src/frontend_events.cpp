@@ -18,19 +18,22 @@ namespace Frontend {
     }
 
     void on_key_press(const std::optional<sf::Event::KeyPressed>& keyPressed, sf::RenderWindow& window, DisplayGrid& grid) {
-        // Existing simulation control key handlers
+
+        if (keyPressed->code == sf::Keyboard::Key::Space) {
+            simulation_paused = !simulation_paused;
+            frontend_message_queue.push(Message{simulation_paused ? Message::MessageType::PAUSE : Message::MessageType::RUN});
+        }
         if (keyPressed->code == sf::Keyboard::Key::Escape) {
             frontend_message_queue.push(Message{Message::MessageType::EXIT});
             window.close();
         }
-        if (keyPressed->code == sf::Keyboard::Key::Space) {
-            frontend_message_queue.push(Message{Message::MessageType::PAUSE});
-        }
-        if (keyPressed->code == sf::Keyboard::Key::Right) {
+        if (keyPressed->code == sf::Keyboard::Key::Right || keyPressed->code == sf::Keyboard::Key::E) {
             frontend_message_queue.push(Message{Message::MessageType::STEP});
+            simulation_paused = true;
         }
         if (keyPressed->code == sf::Keyboard::Key::R) {
-            frontend_message_queue.push(Message{Message::MessageType::RUN});
+            frontend_message_queue.push(Message{Message::MessageType::RESET});
+            simulation_paused = true;
         }
         if (keyPressed->code == sf::Keyboard::Key::P) {
             for (int y = grid.height - 1; y >= 0; --y) {

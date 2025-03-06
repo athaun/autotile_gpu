@@ -36,14 +36,27 @@ void handle_custom_message(std::optional<Message> message) {
 
         grid.resize(new_width, new_height, resize_offset_x, resize_offset_y);
 
-        fmt::print("[FRONTEND] Set grid size to {}x{}\n", new_width, new_height);
+        fmt::print("[FRONTEND] Set display grid size to {}x{}.\n", new_width, new_height);
+
+    } else if (tokens[0] == "GRID_RESIZE") {
+        int new_width = std::stoi(tokens[1]);
+        int new_height = std::stoi(tokens[2]);
+        int resize_offset_x = std::stoi(tokens[3]);
+        int resize_offset_y = std::stoi(tokens[4]);
+
+        grid.resize(new_width, new_height, resize_offset_x, resize_offset_y);
+
+        fmt::print("[FRONTEND] Resize display grid size to {}x{}.\n", new_width, new_height);
+
+        frontend_message_queue.push({Message::RUN});
+
     } else if (tokens[0] == "RESET_SIZE") {
         int width = std::stoi(tokens[1]);
         int height = std::stoi(tokens[2]);
 
         grid.reset(width, height);
 
-        fmt::print("[FRONTEND] Reset grid.\n");
+        fmt::print("[FRONTEND] Reset display grid.\n");
     } else {
         fmt::print("[FRONTEND] Failed to handle message: {}\n", content);
     }

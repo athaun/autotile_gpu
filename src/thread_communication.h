@@ -6,7 +6,7 @@
 #include "common.h"
 
 struct Message {
-    enum MessageType { PAUSE, RUN, STEP, TILE_UPDATE, EXIT, CUSTOM, RESET } type;
+    enum MessageType { PAUSE, RUN, STEP, TILE_UPDATE, EXIT, CUSTOM, RESET, RESIZE_CONFIRMATION } type;
     std::string content;
     Simulator::loc_t location;
     tile_t value;

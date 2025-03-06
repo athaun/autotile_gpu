@@ -117,6 +117,7 @@ void run() {
 
         // Handle simulator messages
         while (auto msg = simulator_message_queue.try_pop()) {
+            // fmt::print("[FRONTEND] message type {}\n", (int)msg->type);
             switch (msg->type) {
                 case Message::MessageType::TILE_UPDATE:
                     handle_tile_update(msg);
@@ -129,6 +130,9 @@ void run() {
                     break;
                 case Message::MessageType::CUSTOM:
                     handle_custom_message(msg);
+                    break;
+                default:
+                    fmt::print("[FRONTEND] Unhandled message type {}\n", (int)msg->type);
                     break;
             }
         }

@@ -69,7 +69,6 @@ namespace Frontend {
         style.WindowPadding = ImVec2(10, 10);
         style.FramePadding = ImVec2(5, 5);
         style.ItemSpacing = ImVec2(5, 5);
-        
     }
 
     void top_bar() {

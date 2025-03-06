@@ -133,12 +133,10 @@ void resize_grid(Seed::grid_t& grid, int& resize_offset_x, int& resize_offset_y,
     grid = std::move(new_grid);
 
     offset_locations(resize_offset_x, resize_offset_y);
-
     Message grid_message;
     grid_message.type = Message::MessageType::CUSTOM;
     grid_message.content = fmt::format("GRID_RESIZE,{},{},{},{}", grid.width, grid.height, resize_offset_x, resize_offset_y);
     simulator_message_queue.push(grid_message);
-
     sim_state = SimState::PAUSED;
 }
 

@@ -1,32 +1,41 @@
 #pragma once
 
-/*
-    Taken from Cherno GIST:
-    https://gist.github.com/TheCherno/b2c71c9291a4a1a29c889e76173c8d14
-*/
-
 #include <chrono>
 #include <iostream>
 #include <string>
 
-class Timer {
-public:
-	Timer() { Reset(); }
-	void Reset() { m_Start = std::chrono::high_resolution_clock::now(); }
-	float Elapsed() const { return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() * 0.001f * 0.001f; }
-	float ElapsedMillis() const { return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - m_Start).count() * 0.001f; }
-private:
-	std::chrono::time_point<std::chrono::high_resolution_clock> m_Start;
-};
-
-class ScopedTimer {
-public:
-    ScopedTimer(std::string name) : m_Name(name) {}
-    ~ScopedTimer() {
-        float time = m_Timer.ElapsedMillis();
-        std::cout << m_Name << " - " << time << "ms\n";
+struct Timer {
+    using clock_t = std::chrono::high_resolution_clock;
+    using time_point_t = std::chrono::time_point<clock_t>;
+    
+    std::unordered_map<std::string, double> total_times;
+    std::unordered_map<std::string, time_point_t> start_times;
+    
+    void start(const std::string& name) {
+        start_times[name] = clock_t::now();
     }
-private:
-    Timer m_Timer;
-    std::string m_Name;
+    
+    void end(const std::string& name) {
+        auto end_time = clock_t::now();
+        auto start_time = start_times[name];
+        double duration = std::chrono::duration<double, std::milli>(end_time - start_time).count();
+        total_times[name] += duration;
+    }
+    
+    void report() {
+        std::cout << "\n=== Performance Report ===" << std::endl;
+        double total_duration = 0.0;
+        for (const auto& [name, duration] : total_times) {
+            total_duration += duration;
+        }
+        for (const auto& [name, duration] : total_times) {
+            double percentage = (duration / total_duration) * 100.0;
+            fmt::print("{}: {:.6f} ms ({:.6f}%)\n", name, duration, percentage);
+        }
+    }
+
+    void reset() {
+        total_times.clear();
+        start_times.clear();
+    }
 };

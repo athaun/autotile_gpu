@@ -1,0 +1,386 @@
+=== Performance Report ===
+apply_deltas: 174.609798 ms (8.012450%)
+send_deltas: 185.115877 ms (8.494551%)
+choose_delta: 203.836038 ms (9.353577%)
+check_attachment: 1000.040731 ms (45.889617%)
+check_transitions: 385.510383 ms (17.690203%)
+choose_location: 230.118098 ms (10.559601%)
+Ticks: 1000000
+Grid Size: 72x72
+Available Locations: 194
+Delta Buffer Count: 0
+[FRONTEND] Resize display grid size to 144x72.
+
+=== Performance Report ===
+apply_deltas: 174.186888 ms (8.000587%)
+send_deltas: 183.850648 ms (8.444453%)
+choose_delta: 202.864198 ms (9.317766%)
+check_attachment: 995.521095 ms (45.725330%)
+check_transitions: 390.418316 ms (17.932323%)
+choose_location: 230.335264 ms (10.579541%)
+Ticks: 1999999
+Grid Size: 144x72
+Available Locations: 268
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.330256 ms (7.992560%)
+send_deltas: 182.603208 ms (8.420152%)
+choose_delta: 201.985006 ms (9.313880%)
+check_attachment: 980.127309 ms (45.195375%)
+check_transitions: 401.908174 ms (18.532685%)
+choose_location: 228.691204 ms (10.545349%)
+Ticks: 2999998
+Grid Size: 144x72
+Available Locations: 312
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.544486 ms (7.994452%)
+send_deltas: 182.558777 ms (8.409702%)
+choose_delta: 201.956037 ms (9.303250%)
+check_attachment: 986.367440 ms (45.437727%)
+check_transitions: 396.983964 ms (18.287352%)
+choose_location: 229.400870 ms (10.567516%)
+Ticks: 3999997
+Grid Size: 144x72
+Available Locations: 343
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.723858 ms (8.005184%)
+send_deltas: 182.310299 ms (8.400847%)
+choose_delta: 201.704847 ms (9.294546%)
+check_attachment: 993.114773 ms (45.762665%)
+check_transitions: 389.504108 ms (17.948324%)
+choose_location: 229.784033 ms (10.588433%)
+Ticks: 4999996
+Grid Size: 144x72
+Available Locations: 380
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.665951 ms (8.008611%)
+send_deltas: 182.222029 ms (8.403175%)
+choose_delta: 201.592084 ms (9.296425%)
+check_attachment: 996.308525 ms (45.944799%)
+check_transitions: 384.996040 ms (17.754104%)
+choose_location: 229.705721 ms (10.592886%)
+Ticks: 5999995
+Grid Size: 144x72
+Available Locations: 404
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.573763 ms (8.010031%)
+send_deltas: 182.154261 ms (8.406002%)
+choose_delta: 201.601097 ms (9.303429%)
+check_attachment: 997.652762 ms (46.039388%)
+check_transitions: 382.531908 ms (17.652971%)
+choose_location: 229.441073 ms (10.588180%)
+Ticks: 6999994
+Grid Size: 144x72
+Available Locations: 423
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.735993 ms (8.011353%)
+send_deltas: 181.972594 ms (8.391161%)
+choose_delta: 201.667488 ms (9.299336%)
+check_attachment: 999.797364 ms (46.102878%)
+check_transitions: 381.799568 ms (17.605627%)
+choose_location: 229.649437 ms (10.589646%)
+Ticks: 7999993
+Grid Size: 144x72
+Available Locations: 436
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.571228 ms (8.013256%)
+send_deltas: 182.134590 ms (8.408601%)
+choose_delta: 201.548344 ms (9.304875%)
+check_attachment: 999.623935 ms (46.149601%)
+check_transitions: 379.383190 ms (17.514970%)
+choose_location: 229.789791 ms (10.608697%)
+Ticks: 8999992
+Grid Size: 144x72
+Available Locations: 449
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.592951 ms (8.022428%)
+send_deltas: 182.139403 ms (8.417394%)
+choose_delta: 201.429701 ms (9.308876%)
+check_attachment: 999.937288 ms (46.211119%)
+check_transitions: 377.036165 ms (17.424356%)
+choose_location: 229.710125 ms (10.615828%)
+Ticks: 9999991
+Grid Size: 144x72
+Available Locations: 463
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.481106 ms (8.023299%)
+send_deltas: 182.160956 ms (8.424732%)
+choose_delta: 201.542869 ms (9.321123%)
+check_attachment: 999.954634 ms (46.246737%)
+check_transitions: 375.701134 ms (17.375740%)
+choose_location: 229.375928 ms (10.608369%)
+Ticks: 10999990
+Grid Size: 144x72
+Available Locations: 476
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.651328 ms (8.036086%)
+send_deltas: 181.976287 ms (8.421342%)
+choose_delta: 201.354905 ms (9.318128%)
+check_attachment: 1000.084255 ms (46.281036%)
+check_transitions: 374.244649 ms (17.318971%)
+choose_location: 229.582848 ms (10.624437%)
+Ticks: 11999989
+Grid Size: 144x72
+Available Locations: 488
+Delta Buffer Count: 0
+[FRONTEND] Resize display grid size to 144x144.
+
+=== Performance Report ===
+apply_deltas: 173.664459 ms (8.035231%)
+send_deltas: 182.256394 ms (8.432769%)
+choose_delta: 201.400406 ms (9.318538%)
+check_attachment: 999.085851 ms (46.226418%)
+check_transitions: 375.644556 ms (17.380591%)
+choose_location: 229.235967 ms (10.606453%)
+Ticks: 12999988
+Grid Size: 144x144
+Available Locations: 507
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.431223 ms (8.017167%)
+send_deltas: 181.970923 ms (8.411930%)
+choose_delta: 201.344485 ms (9.307507%)
+check_attachment: 999.157529 ms (46.187836%)
+check_transitions: 377.973605 ms (17.472503%)
+choose_location: 229.370422 ms (10.603056%)
+Ticks: 13999987
+Grid Size: 144x144
+Available Locations: 524
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.509551 ms (8.014795%)
+send_deltas: 181.908305 ms (8.402753%)
+choose_delta: 201.537678 ms (9.309477%)
+check_attachment: 999.963350 ms (46.190550%)
+check_transitions: 378.426053 ms (17.480348%)
+choose_location: 229.520702 ms (10.602076%)
+Ticks: 14999986
+Grid Size: 144x144
+Available Locations: 541
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.634285 ms (8.020649%)
+send_deltas: 181.831551 ms (8.399303%)
+choose_delta: 201.364947 ms (9.301605%)
+check_attachment: 999.912334 ms (46.188722%)
+check_transitions: 378.397858 ms (17.479246%)
+choose_location: 229.699890 ms (10.610475%)
+Ticks: 15999985
+Grid Size: 144x144
+Available Locations: 552
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.780917 ms (8.025195%)
+send_deltas: 181.970848 ms (8.403406%)
+choose_delta: 201.236832 ms (9.293108%)
+check_attachment: 999.663182 ms (46.164402%)
+check_transitions: 379.014346 ms (17.502866%)
+choose_location: 229.775490 ms (10.611022%)
+Ticks: 16999984
+Grid Size: 144x144
+Available Locations: 562
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.451696 ms (8.009850%)
+send_deltas: 181.865928 ms (8.398412%)
+choose_delta: 201.347347 ms (9.298047%)
+check_attachment: 1000.700053 ms (46.211466%)
+check_transitions: 378.425624 ms (17.475369%)
+choose_location: 229.689344 ms (10.606856%)
+Ticks: 17999983
+Grid Size: 144x144
+Available Locations: 572
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.798483 ms (8.005817%)
+send_deltas: 182.286621 ms (8.396813%)
+choose_delta: 201.576132 ms (9.285361%)
+check_attachment: 1003.778927 ms (46.237864%)
+check_transitions: 379.689390 ms (17.489933%)
+choose_location: 229.772929 ms (10.584212%)
+Ticks: 18999982
+Grid Size: 144x144
+Available Locations: 582
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.648245 ms (7.991149%)
+send_deltas: 182.340703 ms (8.391169%)
+choose_delta: 201.470470 ms (9.271505%)
+check_attachment: 1006.107256 ms (46.300227%)
+check_transitions: 380.332340 ms (17.502581%)
+choose_location: 229.108185 ms (10.543370%)
+Ticks: 19999981
+Grid Size: 144x144
+Available Locations: 593
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.472449 ms (7.989099%)
+send_deltas: 181.719816 ms (8.368924%)
+choose_delta: 201.277697 ms (9.269642%)
+check_attachment: 1006.011168 ms (46.330834%)
+check_transitions: 379.971492 ms (17.499205%)
+choose_location: 228.911643 ms (10.542296%)
+Ticks: 20999980
+Grid Size: 144x144
+Available Locations: 602
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.445437 ms (7.985233%)
+send_deltas: 181.739520 ms (8.367083%)
+choose_delta: 201.130899 ms (9.259840%)
+check_attachment: 1006.519258 ms (46.339013%)
+check_transitions: 380.211934 ms (17.504529%)
+choose_location: 229.030397 ms (10.544302%)
+Ticks: 21999979
+Grid Size: 144x144
+Available Locations: 611
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 174.067015 ms (8.004013%)
+send_deltas: 181.940418 ms (8.366051%)
+choose_delta: 201.109001 ms (9.247468%)
+check_attachment: 1007.537176 ms (46.328944%)
+check_transitions: 380.416501 ms (17.492451%)
+choose_location: 229.676568 ms (10.561072%)
+Ticks: 22999978
+Grid Size: 144x144
+Available Locations: 624
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 174.168094 ms (8.021502%)
+send_deltas: 181.934956 ms (8.379213%)
+choose_delta: 201.239690 ms (9.268314%)
+check_attachment: 1006.789549 ms (46.368793%)
+check_transitions: 377.516919 ms (17.386954%)
+choose_location: 229.616157 ms (10.575223%)
+Ticks: 23999977
+Grid Size: 144x144
+Available Locations: 646
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 174.205324 ms (8.028773%)
+send_deltas: 181.883288 ms (8.382635%)
+choose_delta: 201.298851 ms (9.277459%)
+check_attachment: 1006.939822 ms (46.407833%)
+check_transitions: 376.008929 ms (17.329496%)
+choose_location: 229.426448 ms (10.573804%)
+Ticks: 24999976
+Grid Size: 144x144
+Available Locations: 667
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.664936 ms (8.007488%)
+send_deltas: 181.783172 ms (8.381810%)
+choose_delta: 201.272060 ms (9.280420%)
+check_attachment: 1006.466843 ms (46.407012%)
+check_transitions: 376.273420 ms (17.349529%)
+choose_location: 229.321379 ms (10.573741%)
+Ticks: 25999975
+Grid Size: 144x144
+Available Locations: 682
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.761703 ms (8.006031%)
+send_deltas: 181.745532 ms (8.373884%)
+choose_delta: 201.401268 ms (9.279517%)
+check_attachment: 1005.911906 ms (46.347161%)
+check_transitions: 378.190019 ms (17.425019%)
+choose_location: 229.374729 ms (10.568388%)
+Ticks: 26999974
+Grid Size: 144x144
+Available Locations: 695
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.609262 ms (8.008855%)
+send_deltas: 181.786423 ms (8.386079%)
+choose_delta: 201.350710 ms (9.288609%)
+check_attachment: 1005.577241 ms (46.388782%)
+check_transitions: 376.143841 ms (17.352078%)
+choose_location: 229.248953 ms (10.575597%)
+Ticks: 27999973
+Grid Size: 144x144
+Available Locations: 712
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.736694 ms (8.012099%)
+send_deltas: 181.688276 ms (8.378797%)
+choose_delta: 201.190171 ms (9.278153%)
+check_attachment: 1006.296404 ms (46.406698%)
+check_transitions: 376.062418 ms (17.342619%)
+choose_location: 229.455250 ms (10.581634%)
+Ticks: 28999972
+Grid Size: 144x144
+Available Locations: 729
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.792234 ms (8.017401%)
+send_deltas: 181.587012 ms (8.376990%)
+choose_delta: 201.306227 ms (9.286679%)
+check_attachment: 1004.396779 ms (46.334932%)
+check_transitions: 377.077029 ms (17.395355%)
+choose_location: 229.528774 ms (10.588644%)
+Ticks: 29999971
+Grid Size: 144x144
+Available Locations: 740
+Delta Buffer Count: 0
+
+=== Performance Report ===
+apply_deltas: 173.261578 ms (8.003293%)
+send_deltas: 181.972282 ms (8.405658%)
+choose_delta: 201.152583 ms (9.291634%)
+check_attachment: 975.940621 ms (45.080617%)
+check_transitions: 403.978981 ms (18.660584%)
+choose_location: 228.572529 ms (10.558215%)
+Ticks: 30999970
+Grid Size: 144x144
+Available Locations: 746
+Delta Buffer Count: 0
+[FRONTEND] Resize display grid size to 288x144.
+
+=== Performance Report ===
+apply_deltas: 173.155841 ms (7.988037%)
+send_deltas: 181.746219 ms (8.384329%)
+choose_delta: 201.163669 ms (9.280096%)
+check_attachment: 972.954448 ms (44.884403%)
+check_transitions: 410.040709 ms (18.916027%)
+choose_location: 228.628542 ms (10.547108%)
+Ticks: 31999969
+Grid Size: 288x144
+Available Locations: 757
+Delta Buffer Count: 0

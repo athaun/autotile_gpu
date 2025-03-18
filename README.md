@@ -2,6 +2,11 @@
 
 ![image](https://github.com/user-attachments/assets/b0e0aa8c-6ed4-47a0-bb2f-86424ffe678f)
 
+
+https://github.com/user-attachments/assets/6ad1c45c-b93a-4fc6-a61c-c3ed9ddf941a
+
+
+
 A tile automata simulator that takes advantage of GPU compute for large-scale simulations.  
 
 ## Requirements  

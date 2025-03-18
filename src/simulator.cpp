@@ -3,6 +3,7 @@
 #include "simulator.h"
 #include <thread>
 #include <unordered_set>
+#include <fmt/core.h>
 
 namespace Simulator {
 
@@ -16,17 +17,56 @@ Rules::Rules<Rules::affinity_t> vertical_affinities;
 
 Seed::grid_t grid;
 
-std::unordered_set<loc_t> available_locations;
+std::vector<loc_t> available_locations_vector; // Hold all available locations for fast iteration
+std::unordered_set<loc_t> available_locations_set; // Maintain unique locations
+std::unordered_map<loc_t, size_t> location_indices; // Map locations to their indices in the vector for O(1) access
 
-void remove_location(loc_t location) {
-    available_locations.erase(location);
+/**
+ * Remove a location from the available locations datastructures
+ * @param location The location to remove
+ */
+void remove_location(const loc_t& location) {
+    auto it = location_indices.find(location);
+    if (it == location_indices.end()) return;
+    
+    size_t index = it->second;
+
+    if (index < available_locations_vector.size() - 1) {
+        // Swap with the last element in the vector to maintain O(1) removal
+        std::swap(available_locations_vector[index], available_locations_vector.back());
+        // Update the index of the swapped element
+        location_indices[available_locations_vector[index]] = index;
+    }
+
+    // Remove the last element and delete the index from the map and set
+    available_locations_vector.pop_back();
+    location_indices.erase(it);
+    available_locations_set.erase(location);
 }
 
-void add_location(loc_t location) {
-    available_locations.insert(location);
+void add_location(const loc_t& location) {
+    // Check if the location is already in the set to avoid duplicates
+    if (available_locations_set.find(location) != available_locations_set.end()) return;
+
+    // Add the location to the vector and update the map and set
+    available_locations_vector.push_back(location);
+    location_indices[location] = available_locations_vector.size() - 1;
+    available_locations_set.insert(location);
+}
+
+loc_t choose_random_location() {
+    if (available_locations_vector.empty()) {
+        return {-1, -1}; // No available locations
+    }
+    size_t index = rand() % available_locations_vector.size();
+    return available_locations_vector[index];
 }
 
 void initialize_available_locations() {
+    available_locations_vector.clear();
+    available_locations_set.clear();
+    location_indices.clear();
+    
     for (int x = 0; x < grid.width; x++) {
         for (int y = 0; y < grid.height; y++) {
             if (grid.tiles[x + y * grid.width] == Rules::EMPTY_TILE) {
@@ -37,23 +77,14 @@ void initialize_available_locations() {
     }
 }
 
-loc_t choose_random_location() {
-    if (available_locations.empty()) {
-        return {-1, -1}; // No available locations
-    }
-
-    auto it = available_locations.begin();
-    std::advance(it, rand() % available_locations.size());
-    return *it;
-}
-
 void offset_locations(int offset_x, int offset_y) {
-    for (const loc_t& location : available_locations) {
+    for (const loc_t& location : available_locations_vector) {
         loc_t& mutable_location = const_cast<loc_t&>(location);
         mutable_location.x += offset_x;
         mutable_location.y += offset_y;
     }
 }
+
 
 void DeltaBuffer::push(delta_t delta) {
     if (count < MAX_DELTAS) {
@@ -91,7 +122,6 @@ void reset_simulation() {
 
     grid = Seed::load(system_name_cache + ".seed");
 
-    available_locations.clear();
     initialize_available_locations();
 
     delta_buffer.count = 0;
@@ -151,30 +181,32 @@ void log_deltas(DeltaBuffer& buffer) {
 
 	for (size_t i = 0; i < buffer.count; i++) {
 		const delta_t& delta = buffer.deltas[i];
-		std::cout << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
-		if (delta.note.length() != 0) {
-			std::cout << delta.note;
-		}
-		std::cout << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
-				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
-				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b);
-		
-		std::cout << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
-				  << Tile::name(delta.before.tile_a) << " + " << Tile::name(delta.before.tile_b)
-				  << " -> " << Tile::name(delta.after.tile_a) << " + " << Tile::name(delta.after.tile_b) << "\n\n";
+        fmt::print("{}", (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) "));
+        if (!delta.note.empty()) {
+            fmt::print("{}", delta.note);
+        }
+        
+        fmt::print("\n\t({}, {}, {} + {} -> {} + {})",
+                  delta.location_a.x, delta.location_a.y,
+                  Tile::decode(delta.before.tile_a), Tile::decode(delta.before.tile_b),
+                  Tile::decode(delta.after.tile_a), Tile::decode(delta.after.tile_b));
+        
+        fmt::print("\n\t({}, {}, {} + {} -> {} + {})\n\n",
+                  delta.location_a.x, delta.location_a.y,
+                  Tile::name(delta.before.tile_a), Tile::name(delta.before.tile_b),
+                  Tile::name(delta.after.tile_a), Tile::name(delta.after.tile_b));
 
-
-		delta_file << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
-		if (delta.note.length() != 0) {
-			delta_file << delta.note;
-		}
-		delta_file << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
-				  << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
-				  << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b);
-		
-		delta_file << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
-				  << Tile::name(delta.before.tile_a) << " + " << Tile::name(delta.before.tile_b)
-				  << " -> " << Tile::name(delta.after.tile_a) << " + " << Tile::name(delta.after.tile_b) << "\n\n";
+        delta_file << (delta.type == delta_t::Type::ATTACHMENT ? "(Attachment) " : "(Transition) ");
+        if (delta.note.length() != 0) {
+            delta_file << delta.note;
+        }
+        delta_file << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
+                << Tile::decode(delta.before.tile_a) << " + " << Tile::decode(delta.before.tile_b)
+                << " -> " << Tile::decode(delta.after.tile_a) << " + " << Tile::decode(delta.after.tile_b);
+        
+        delta_file << "\n\t(" << delta.location_a.x << ", " << delta.location_a.y << ", "
+                << Tile::name(delta.before.tile_a) << " + " << Tile::name(delta.before.tile_b)
+                << " -> " << Tile::name(delta.after.tile_a) << " + " << Tile::name(delta.after.tile_b) << "\n\n";
 		
 	}
 
@@ -255,12 +287,10 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
         { 0, 1 }   // Down 
     };
 
+    std::vector<delta_t> local_deltas[4];
+
+    #pragma omp parallel for
     for (int dir = 0; dir < 4; dir++) {
-        // Select the appropriate set of affinities based on direction
-        Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
-
-        std::string note = (dir % 2 == 0) ? "haff" : "vaff";
-
         loc_t neighbor_tile_location = { location.x + neighborhood[dir].x, location.y + neighborhood[dir].y };
 
         // Check if the neighbor location is out of bounds
@@ -268,6 +298,9 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
             neighbor_tile_location.y < 0 || neighbor_tile_location.y >= grid.height) {
             continue;
         }
+
+        // Select the appropriate set of affinities based on direction
+        Rules::Rules<Rules::affinity_t>& affinities = (dir % 2 == 0) ? horizontal_affinities : vertical_affinities;
 
         // Get the tile at the neighbor location
         tile_t neighbor_tile = neighbor_tile_location.get(grid);
@@ -312,7 +345,6 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
                 affinity = affinities.find(center_tile, neighbor_tile, true);
                 delta_location_a = location;
                 delta_location_b = neighbor_tile_location;
-                note += "-right";
                 break;
             case 1:
                 // { 0, -1 }, Up (Adjusted for bottom-left origin)
@@ -320,7 +352,6 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
                 affinity = affinities.find(center_tile, neighbor_tile, true);
                 delta_location_a = location;
                 delta_location_b = neighbor_tile_location;
-                note += "-up";
                 break;
             case 2:
                 // { -1, 0 }, Left
@@ -328,7 +359,6 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
                 affinity = affinities.find(neighbor_tile, center_tile, false);
                 delta_location_a = neighbor_tile_location;
                 delta_location_b = location;
-                note += "-left";
                 break;
             case 3:
                 // { 0, 1 }, Down (Adjusted for bottom-left origin)
@@ -336,13 +366,10 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
                 affinity = affinities.find(neighbor_tile, center_tile, false);
                 delta_location_a = neighbor_tile_location;
                 delta_location_b = location;
-                note += "-down";
                 break;
             default:
                 continue;
         }
-
-        note += " of center tile: " + Tile::decode(center_tile);
 
         // If the affinity is invalid, skip this iteration
         if (Rules::is_invalid(affinity)) continue; // TODO CHECK IF SHOULD BE && or || in this fn
@@ -365,12 +392,15 @@ void check_attachment(tile_t& center_tile, const loc_t& location, std::vector<de
             { affinity.tile_a, affinity.tile_b }, // after state from the affinity lookup
             delta_location_a,
             delta_location_b,
-            delta_t::Type::ATTACHMENT,
-            note
+            delta_t::Type::ATTACHMENT
         };
 
-        // Add the valid delta to the list of possible deltas
-        possible_deltas.push_back(delta);
+        local_deltas[dir].push_back(delta);
+    }
+
+    // Combine local deltas into the main possible_deltas vector
+    for (int dir = 0; dir < 4; dir++) {
+        possible_deltas.insert(possible_deltas.end(), local_deltas[dir].begin(), local_deltas[dir].end());
     }
 }
 
@@ -436,8 +466,6 @@ void choose_delta(std::vector<delta_t>& possible_deltas) {
     possible_deltas.clear();
 }
 
-#include <fmt/core.h>
-
 void process_control_messages() {
     while (auto msg = frontend_message_queue.try_pop()) {
 
@@ -461,27 +489,55 @@ void process_control_messages() {
     }
 }
 
+Timer profiler;
+
 void run_serial() {
 	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
 
-	int ticks = 0;
+	long ticks = 0;
 	while (true) {
-		process_control_messages();
+        // profiler.start("process_messages");
+		    // process_control_messages();
+        // profiler.end("process_messages");
 
-		if (sim_state == SimState::PAUSED) {
-			continue;
-		}
+		// if (sim_state == SimState::PAUSED) {
+		// 	continue;
+		// }
 		
-        loc_t location = choose_random_location();
+        // profiler.start("choose_location");
+            loc_t location = choose_random_location();
+        // profiler.end("choose_location");
+
 		tile_t tile_a = grid.tiles[location.x + location.y * grid.width];
 
-		check_transitions(tile_a, location, possible_deltas);
-		check_attachment(tile_a, location, possible_deltas);
+        // profiler.start("check_transitions");
+            check_transitions(tile_a, location, possible_deltas);
+        // profiler.end("check_transitions");
 
-		choose_delta(possible_deltas);
-        send_deltas(delta_buffer);        
-        apply_deltas(delta_buffer);
+        // profiler.start("check_attachment");
+            check_attachment(tile_a, location, possible_deltas);
+        // profiler.end("check_attachment");
+
+        // profiler.start("choose_delta");
+            choose_delta(possible_deltas);
+        // profiler.end("choose_delta");
+
+        // profiler.start("send_deltas");
+            send_deltas(delta_buffer);        
+        // profiler.end("send_deltas");
+
+        // profiler.start("apply_deltas");
+            apply_deltas(delta_buffer);
+        // profiler.end("apply_deltas");
+
+        // if (ticks++ % 999999 == 0) {
+        //     profiler.report();
+        //     profiler.reset();
+        //     fmt::print("Ticks: {}\nGrid Size: {}x{}\nAvailable Locations: {}\nDelta Buffer Count: {}\n", 
+        //                 ticks, grid.width, grid.height, available_locations_vector.size(), delta_buffer.count);
+        // }
+        
 	}
 }
 
@@ -520,11 +576,11 @@ void run_parallel() {
     sq->evalAwait();
 
     // 6. Print the output
-    std::cout << "Output: {  ";
+    fmt::print("Output: {{  ");
     for (const uint32_t& elem : tensorOut->vector()) {
-        std::cout << elem << "  ";
+        fmt::print("{}  ", elem);
     }
-    std::cout << "}" << std::endl;
+    fmt::print("}}\n");
 
     // Verify the result
     if (tensorOut->vector() != std::vector<uint32_t>{ 0, 4, 12 }) {

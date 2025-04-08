@@ -8,7 +8,7 @@
 namespace Simulator {
 
 enum class SimState { RUNNING, PAUSED, STEP };
-SimState sim_state = SimState::PAUSED;
+std::atomic<SimState> sim_state = SimState::PAUSED;
 
 Rules::Rules<Rules::transition_t> horizontal_transitions;
 Rules::Rules<Rules::transition_t> vertical_transitions;
@@ -466,44 +466,46 @@ void choose_delta(std::vector<delta_t>& possible_deltas) {
     possible_deltas.clear();
 }
 
+std::atomic<bool> running(true);
 void process_control_messages() {
-    while (auto msg = frontend_message_queue.try_pop()) {
-
-        if (msg->type == Message::PAUSE) {
-            sim_state = SimState::PAUSED;
-            fmt::print("[BACKEND] Simulator paused.\n");
-        } else if (msg->type == Message::STEP) {
-            sim_state = SimState::STEP;
-            fmt::print("[BACKEND] Simulator stepping.\n");
-        } else if (msg->type == Message::RUN) {
-            sim_state = SimState::RUNNING;
-            fmt::print("[BACKEND] Simulator running.\n");
-        } else if (msg->type == Message::RESET) {
-            reset_simulation();
-            fmt::print("[BACKEND] Simulator reset.\n");
-        } else if (msg->type == Message::EXIT) {
-            // TODO CLEANUP MEMORY :D
-            fmt::print("[BACKEND] Simulator exiting.\n");
-            exit(0);
+    while (running) {
+        while (auto msg = frontend_message_queue.try_pop()) {
+            if (msg->type == Message::PAUSE) {
+                sim_state = SimState::PAUSED;
+                fmt::print("[BACKEND] Simulator paused.\n");
+            } else if (msg->type == Message::STEP) {
+                sim_state = SimState::STEP;
+                fmt::print("[BACKEND] Simulator stepping.\n");
+            } else if (msg->type == Message::RUN) {
+                sim_state = SimState::RUNNING;
+                fmt::print("[BACKEND] Simulator running.\n");
+            } else if (msg->type == Message::RESET) {
+                reset_simulation();
+                fmt::print("[BACKEND] Simulator reset.\n");
+            } else if (msg->type == Message::EXIT) {
+                fmt::print("[BACKEND] Simulator exiting.\n");
+                running = false; // Stop the thread
+                break;
+            }
         }
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Avoid busy-waiting
     }
 }
 
 Timer profiler;
 
 void run_serial() {
+
+    std::thread(process_control_messages).detach();
+    
 	std::vector<delta_t> possible_deltas = std::vector<delta_t>();
     srand(time(NULL));
 
 	long ticks = 0;
-	while (true) {
-        // profiler.start("process_messages");
-		    // process_control_messages();
-        // profiler.end("process_messages");
-
-		// if (sim_state == SimState::PAUSED) {
-		// 	continue;
-		// }
+	while (running) {
+		if (sim_state == SimState::PAUSED) {
+			continue;
+		}
 		
         // profiler.start("choose_location");
             loc_t location = choose_random_location();
